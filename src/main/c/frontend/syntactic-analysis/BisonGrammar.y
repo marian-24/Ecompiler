@@ -27,14 +27,16 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 	/** Terminals. */
 
 	signed int integer;
+	double decimal;
+	int boolean;
+	char * string;
 	TokenLabel token;
 
 	/** Non-terminals. */
-
 	Constant * constant;
-	Expression * expression;
 	Factor * factor;
 	Program * program;
+
 }
 
 /**
@@ -50,17 +52,47 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 %destructor { destroyFactor($$); } <factor>
 
 /** Terminals. */
-%token <integer> INTEGER
-%token <token> ADD
-%token <token> CLOSE_BRACE
-%token <token> CLOSE_COMMENT
-%token <token> CLOSE_PARENTHESIS
-%token <token> DIV
-%token <token> MUL
-%token <token> OPEN_BRACE
-%token <token> OPEN_COMMENT
-%token <token> OPEN_PARENTHESIS
-%token <token> SUB
+
+/**literals*/
+
+
+/**keywords- domain*/
+
+
+/**keywords- species Definitions*/
+
+/**Keywords- region*/
+
+/**keywords- primitive types*/
+
+/**keywords- population actions*/
+
+/**keywords- Encounter*/
+
+/** keyword- Simulation*/
+
+/**k- control*/
+
+/**k-Predefined behaviors */
+
+/**output*/
+
+/** ENUM*/
+/**diet*/
+
+/**habitat*/
+
+/**liteerals*/
+
+/**Arithmetic operators*/
+
+/** Assignment operators */
+
+/** Relational operators */
+
+/** Logical operators */
+
+/** Punctuation */
 
 %token <token> IGNORED
 %token <token> UNKNOWN
