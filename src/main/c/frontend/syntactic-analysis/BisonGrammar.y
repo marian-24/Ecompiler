@@ -90,12 +90,27 @@ adding them would drop the entire tree even on success!
 /** Terminals. */
 
 /**literals*/
-
+%token <integer> INTEGER
+%token <decimal> FLOAT
+%token <boolean> BOOLEAN
+%token <string>  STRING
+%token <string>  ID
 
 /**keywords- domain*/
-
+%token <token> SPECIES
+%token <token> REGION
+%token <token> ECOSYSTEM
 
 /**keywords- species Definitions*/
+%token <token> CREATE_SPECIES
+%token <token> LIFESPAN
+%token <token> REPRODUCTION_RATE
+%token <token> SPEED
+%token <token> REPRODUCTION_STRATEGY
+%token <token> DIET
+%token <token> ENVIRONMENTAL_TOLERANCE
+%token <token> HABITAT
+%token <token> ENERGY
 
 /**Keywords- region*/
 
