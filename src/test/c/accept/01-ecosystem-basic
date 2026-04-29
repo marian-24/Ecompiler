@@ -1,0 +1,28 @@
+//Ecosistema con una región y una especie
+
+species Puma = createSpecies {
+    int lifespan = 15;
+    float reproduction_rate = 0.4;
+    int speed = 8;
+    reproduction_strategy rep_strat = reproduction_strategy.k_selected;
+    diet my_diet = diet.carnivore;
+    habitat hab = habitat.terrestrial;
+    environmental_tolerance env_tol;
+    env_tol.temperature = [5, 35];
+    env_tol.humidity = [30, 80];
+    env_tol.altitude = [0, 4000];
+}
+
+region Bosque {
+    temperature = 20;
+    humidity = 70;
+    altitude = 800;
+    carrying_capacity = 200;
+    habitat = habitat.terrestrial;
+}
+
+ecosystem Patagonia {
+    region Bosque;
+    species Puma;
+}
+

@@ -1,0 +1,18 @@
+//Cambio ambiental fijo en una generación específica
+
+region Bosque {
+    temperature = 20;
+    humidity = 70;
+    altitude = 800;
+    carrying_capacity = 200;
+    habitat = habitat.terrestrial;
+}
+
+ecosystem Patagonia {
+    region Bosque;
+}
+
+on generation 50 in Patagonia.Bosque {
+    temperature += 20;
+    humidity -= 40;
+}
