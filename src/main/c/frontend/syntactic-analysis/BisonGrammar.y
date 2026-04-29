@@ -33,9 +33,41 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 	TokenLabel token;
 
 	/** Non-terminals. */
-	Constant * constant;
-	Factor * factor;
 	Program * program;
+	StatementList * statementList;
+	Statement * statement;
+
+	SpeciesDefinition * speciesDefinition;
+	SpeciesAttributeList * speciesAttributeList;
+	SpeciesAttribute * speciesAttribute;
+	EnvTolerance * envTolerance;
+	RangeValue * rangeValue;
+
+	RegionDefinition * regionDefinition;
+
+	EcosystemDefinition * ecosystemDefinition;
+	EcosystemMemberList * ecosystemMemberList;
+	EcosystemMember * ecosystemMember;
+
+	AddStatement * addStatement;
+	RemoveStatement * removeStatement;
+	MoveStatement * moveStatement;
+	AttributeAssignment * attributeAssignment;
+
+	OnEncounterBlock * onEncounterBlock;
+	OnGenerationBlock * onGenerationBlock;
+	EveryRandomBlock * everyRandomBlock;
+
+	SimulateStatement * simulateStatement;
+
+	IfStatement * ifStatement;
+	WhileStatement * whileStatement;
+	ForEachStatement * forEachStatement;
+
+	LogStatement * logStatement;
+
+	Expression * expression;
+	Condition * condition;
 
 }
 
@@ -47,9 +79,13 @@ void yyerror(const YYLTYPE * location, const char * message) {}
  *
  * @see https://www.gnu.org/software/bison/manual/html_node/Destructor-Decl.html
  */
-%destructor { destroyConstant($$); } <constant>
-%destructor { destroyExpression($$); } <expression>
-%destructor { destroyFactor($$); } <factor>
+/**
+we do not add destructors for <program>, <statementList> or <statement>. 
+adding them would drop the entire tree even on success!
+*/
+%destructor { destroyExpression($$); }     <expression>
+%destructor { destroyCondition($$); }      <condition>
+%destructor { free($$); }                  <string>
 
 /** Terminals. */
 
@@ -98,10 +134,9 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 %token <token> UNKNOWN
 
 /** Non-terminals. */
-%type <constant> constant
-%type <expression> expression
-%type <factor> factor
-%type <program> program
+%type <program>              program
+%type <statementList>        statementList
+%type <statement>            statement
 
 /**
  * Precedence and associativity.
@@ -109,28 +144,25 @@ void yyerror(const YYLTYPE * location, const char * message) {}
  * @see https://en.cppreference.com/w/cpp/language/operator_precedence.html
  * @see https://www.gnu.org/software/bison/manual/html_node/Precedence.html
  */
-%left ADD SUB
-%left MUL DIV
+%left OR
+%left AND
+%right NOT
+%left LT GT EQ NEQ LTE GTE
+%left ADD_OP SUB_OP
+%left MUL_OP DIV_OP
 
 %%
 
 // IMPORTANT: To use λ in the following grammar, use the %empty symbol.
 
-program: expression											{ $$ = ExpressionProgramSemanticAction($1); }
+program: statementList
+	{ $$ = ProgramSemanticAction($1); }
 	;
 
-expression: expression[left] ADD expression[right]			{ $$ = ArithmeticExpressionSemanticAction($left, $right, ADDITION); }
-	| expression[left] DIV expression[right]				{ $$ = ArithmeticExpressionSemanticAction($left, $right, DIVISION); }
-	| expression[left] MUL expression[right]				{ $$ = ArithmeticExpressionSemanticAction($left, $right, MULTIPLICATION); }
-	| expression[left] SUB expression[right]				{ $$ = ArithmeticExpressionSemanticAction($left, $right, SUBTRACTION); }
-	| factor												{ $$ = FactorExpressionSemanticAction($1); }
-	;
-
-factor: OPEN_PARENTHESIS expression CLOSE_PARENTHESIS		{ $$ = ExpressionFactorSemanticAction($2); }
-	| constant												{ $$ = ConstantFactorSemanticAction($1); }
-	;
-
-constant: INTEGER											{ $$ = IntegerConstantSemanticAction($1); }
+statementList: statement
+	{ $$ = StatementListSemanticAction($1, NULL); }
+	| statementList statement
+	{ $$ = StatementListSemanticAction($2, $1); }
 	;
 
 %%
