@@ -145,7 +145,8 @@ string              \"[^\"]*\"
 {identifier}                        {return IdentifierLexemeAction();}
 
 /*Whitespace and unknown*/
-{whitespace}						{ return IgnoredLexemeAction(); }
+//{whitespace}						{ return IgnoredLexemeAction(); }
+[[:space:]]+                        { return IgnoredLexemeAction(); }
 .									{ return UnknownLexemeAction(); }
 
 <<EOF>>								{ return EOFLexemeAction(); }
