@@ -99,52 +99,52 @@ string              \"[^\"]*\"
 <MULTILINE_COMMENT>.				{ return IgnoredLexemeAction(); }
 "//"[^\n]*                          { return IgnoredLexemeAction(); }
 
-/*Keywords - Domain types*/
+//Keywords - Domain types
 
-/*Keywords - Species attributes*/
+//Keywords - Species attributes
 
-/*Keywords - Region attributes*/
+//Keywords - Region attributes
 
-/*Keywords - Primitive types*/
+//Keywords - Primitive types
 
-/*Keywords - Actions*/
+//Keywords - Actions
 
-/*Keywords - Encounter*/
+//Keywords - Encounter
 
-/*Keywords - Simulation*/
+//Keywords - Simulation
 
-/*Keywords - Control flow*/
+//Keywords - Control flow
 
-/*Keywords - Control flow*/
+//Keywords - Control flow
 
-/*Keywords - Output*/
+//Keywords - Output
 
-/*Enum values*/
+//Enum values
 
-/*Logical operators*/
+//Logical operators
 
-/*Assignment operators*/
+//Assignment operators
 
-/*Relational operators*/
+//Relational operators
 
 
-/*Arithmetic operators*/
+//Arithmetic operators
 "-"									{ return ArithmeticOperatorLexemeAction(SUB); }
 "*"									{ return ArithmeticOperatorLexemeAction(MUL); }
 "/"									{ return ArithmeticOperatorLexemeAction(DIV); }
 "+"									{ return ArithmeticOperatorLexemeAction(ADD); }
 
-/*Punctuation*/
+//Punctuation
 "("									{ return ParenthesisLexemeAction(OPEN_PARENTHESIS); }
 ")"									{ return ParenthesisLexemeAction(CLOSE_PARENTHESIS); }
 
-/*literals*/
+//literals
 [[:digit:]]+						{ return IntegerLexemeAction(); }
 
-/*Identifiers*/
+//Identifiers
 {identifier}                        {return IdentifierLexemeAction();}
 
-/*Whitespace and unknown*/
+//Whitespace and unknown
 //{whitespace}						{ return IgnoredLexemeAction(); }
 [[:space:]]+                        { return IgnoredLexemeAction(); }
 .									{ return UnknownLexemeAction(); }
