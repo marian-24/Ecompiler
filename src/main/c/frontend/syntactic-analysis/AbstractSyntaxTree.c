@@ -1,10 +1,11 @@
+//este documento contiene las funciones de destrucción de los nodos del AST, para liberar la memoria al finalizar la ejecución del programa
+
 #include "AbstractSyntaxTree.h"
 
 /* MODULE INTERNAL STATE */
 
 static Logger * _logger = NULL;
 
-/** Shutdown module's internal state. */
 void _shutdownAbstractSyntaxTreeModule() {
 	if (_logger != NULL) {
 		logDebugging(_logger, "Destroying module: AbstractSyntaxTree...");
@@ -140,8 +141,6 @@ void destroyEcosystemDefinition(EcosystemDefinition * ecosystem) {
 	}
 }
 
-//
-
 void destroyAddStatement(AddStatement * stmt) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
 	if (stmt != NULL) {
@@ -170,8 +169,6 @@ void destroyMoveStatement(MoveStatement * stmt) {
 	}
 }
 
-//
-
 void destroyAttributeAssignment(AttributeAssignment * assignment) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
 	if (assignment != NULL) {
@@ -181,8 +178,6 @@ void destroyAttributeAssignment(AttributeAssignment * assignment) {
 		free(assignment);
 	}
 }
-
-//
 
 void destroyOnEncounterBlock(OnEncounterBlock * block) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
@@ -216,8 +211,6 @@ void destroyEveryRandomBlock(EveryRandomBlock * block) {
 	}
 }
 
-//
-
 void destroySimulateStatement(SimulateStatement * stmt) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
 	if (stmt != NULL) {
@@ -225,8 +218,6 @@ void destroySimulateStatement(SimulateStatement * stmt) {
 		free(stmt);
 	}
 }
-
-//
 
 void destroyIfStatement(IfStatement * stmt) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
@@ -257,8 +248,6 @@ void destroyForEachStatement(ForEachStatement * stmt) {
 		free(stmt);
 	}
 }
-
-//
 
 void destroyLogStatement(LogStatement * stmt) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
@@ -332,8 +321,6 @@ void destroyStatementList(StatementList * list) {
 		free(list);
 	}
 }
-
-//
 
 void destroyProgram(Program * program) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);

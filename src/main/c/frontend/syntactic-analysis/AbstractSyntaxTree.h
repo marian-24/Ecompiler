@@ -70,6 +70,7 @@ typedef struct AttributeAssignment  AttributeAssignment;
 
 
 typedef enum StatementType {
+	STATEMENT_BEHAVIOR,
 	STATEMENT_SPECIES,
 	STATEMENT_REGION,
 	STATEMENT_ECOSYSTEM,
@@ -262,6 +263,16 @@ struct EcosystemDefinition {
 	EcosystemMemberList * members;
 };
 
+//behavior
+typedef enum {
+    BEHTY_HUNT,
+    BEHTY_FLEE,
+    BEHTY_EAT,
+    BEHTY_DRINK,
+    BEHTY_HARVEST,
+    BEHTY_IGNORE
+} BehaviorType;
+
  //attribute 
 struct AttributeAssignment {
 	char * objectName;
@@ -291,20 +302,21 @@ struct MoveStatement {
 struct Statement {
 	StatementType type;
 	union {
+		BehaviorType behavior;
 		SpeciesDefinition * speciesDefinition;
 		RegionDefinition * regionDefinition;
 		EcosystemDefinition * ecosystemDefinition;
 		AddStatement * addStatement;
 		RemoveStatement * removeStatement;
 		MoveStatement * moveStatement;
-		struct OnEncounterBlock * onEncounterBlock;
-		struct OnGenerationBlock * onGenerationBlock;
-		struct EveryRandomBlock * everyRandomBlock;
-		struct SimulateStatement * simulateStatement;
-		struct IfStatement * ifStatement;
-		struct WhileStatement * whileStatement;
-		struct ForEachStatement * forEachStatement;
-		struct LogStatement * logStatement;
+		OnEncounterBlock * onEncounterBlock;
+		OnGenerationBlock * onGenerationBlock;
+		EveryRandomBlock * everyRandomBlock;
+		SimulateStatement * simulateStatement;
+		IfStatement * ifStatement;
+		WhileStatement * whileStatement;
+		ForEachStatement * forEachStatement;
+		LogStatement * logStatement;
 		AttributeAssignment * attributeAssignment;
 	};
 };
@@ -381,7 +393,7 @@ struct Program {
 	StatementList * statements;
 };
 
- //destructors
+//destructors
 
 void destroyProgram(Program * program);
 void destroyStatementList(StatementList * list);

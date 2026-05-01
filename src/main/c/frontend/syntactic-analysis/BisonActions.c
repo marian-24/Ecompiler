@@ -83,3 +83,11 @@ Program * ExpressionProgramSemanticAction(Expression * expression) {
 	_compilerState->abstractSyntaxtTree = program;
 	return program;
 }
+
+
+Statement * BehaviorStatementSemanticAction(BehaviorType type) {
+    Statement * stmt = malloc(sizeof(Statement));
+    stmt->type = STATEMENT_BEHAVIOR;
+    stmt->data.behavior = type;
+    return stmt;
+}

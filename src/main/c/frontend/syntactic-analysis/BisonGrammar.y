@@ -23,6 +23,8 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 %define parse.error detailed
 %locations
 
+
+// lista de posibles valores semanticos dentro del analizador
 %union {
 	/** Terminals. */
 
@@ -68,7 +70,6 @@ void yyerror(const YYLTYPE * location, const char * message) {}
 
 	Expression * expression;
 	Condition * condition;
-
 }
 
 /**
@@ -89,7 +90,8 @@ adding them would drop the entire tree even on success!
 
 /** Terminals. */
 
-/**literals*/
+/**literales: valores que escribe el usuario en el código. 
+Son reconocidos por Flex y tienen valor semántico*/
 %token <integer> INTEGER
 %token <decimal> FLOAT
 %token <boolean> BOOLEAN
@@ -118,8 +120,8 @@ adding them would drop the entire tree even on success!
 %token <token> CARRYING_CAPACITY
 %token <token> TEMPERATURE
 
-/**keywords- primitive types*/
-%token <token> INT
+/**keywords- primitive types: palabras reservadas para declarar el tipo de dato.*/
+%token <token> INT_TYPE
 %token <token> FLOAT_TYPE
 %token <token> BOOLEAN_TYPE
 %token <token> STRING_TYPE
@@ -224,6 +226,7 @@ adding them would drop the entire tree even on success!
 %token <token> SEMICOLON
 %token <token> COMMA
 %token <token> DOT
+%token <token> TEMPERATURE
 
 %token <token> UNKNOWN
 
@@ -264,10 +267,17 @@ adding them would drop the entire tree even on success!
 %type <expression>           expression
 %type <condition>            condition
 
+<<<<<<< Updated upstream
 %type <token> reproductiveStrategyValue
 %type <token> dietValue
 %type <token> habitatSpeciesValue
 %type <token> habitatRegionValue
+=======
+%type <token> 				 reproductiveStrategyValue
+%type <token> 				 dietValue
+%type <token> 				 habitatSpeciesValue
+%type <token> 				 habitatRegionValue
+>>>>>>> Stashed changes
 
 /**
  * Precedence and associativity.
@@ -326,6 +336,33 @@ statement: speciesDefinition
 	{ $$ = LogStatementWrapperSemanticAction($1); }
 	| attributeAssignment
 	{ $$ = AttributeAssignmentStatementSemanticAction($1); }
+
+	// comportamientos predefinidos
+	| HUNT SEMICOLON
+	{ $$ = BehaviorStatementSemanticAction(BEHTY_HUNT); }
+	| FLEE SEMICOLON
+	{ $$ = BehaviorStatementSemanticAction(BEHTY_FLEE); }
+	| EAT SEMICOLON
+	{ $$ = BehaviorStatementSemanticAction(BEHTY_EAT); }
+	| DRINK SEMICOLON
+	{ $$ = BehaviorStatementSemanticAction(BEHTY_DRINK); }
+	| HARVEST SEMICOLON
+	{ $$ = BehaviorStatementSemanticAction(BEHTY_HARVEST); }
+	| IGNORE SEMICOLON
+	{ $$ = BehaviorStatementSemanticAction(BEHTY_IGNORE); }
+
+	// permite declarar una variable entera y asignarle un valor inicial
+    | INT_TYPE ID ASSIGN expression SEMICOLON
+	{ $$ = IntDeclarationSemanticAction($2, $4); }
+    | FLOAT_TYPE ID ASSIGN expression SEMICOLON
+	{ $$ = FloatDeclarationSemanticAction($2, $4); }
+    | STRING_TYPE ID ASSIGN expression SEMICOLON
+	{ $$ = StringDeclarationSemanticAction($2, $4); }
+    | BOOLEAN_TYPE ID ASSIGN expression SEMICOLON
+	{ $$ = BooleanDeclarationSemanticAction($2, $4); }
+	| UNKNOWN
+	{ $$ = NULL;
+	  yyerror(&$1, "Token desconocido"); }
 	;
 
 /**species*/
@@ -339,11 +376,11 @@ speciesAttributeList: speciesAttribute
 	{ $$ = SpeciesAttributeListSemanticAction($2, $1); }
 	;
 
-speciesAttribute: INT LIFESPAN ASSIGN INTEGER SEMICOLON
+speciesAttribute: INT_TYPE LIFESPAN ASSIGN INTEGER SEMICOLON
 	{ $$ = LifespanAttributeSemanticAction($4); }
 	| FLOAT_TYPE REPRODUCTION_RATE ASSIGN FLOAT SEMICOLON
 	{ $$ = ReproductionRateAttributeSemanticAction($4); }
-	| INT SPEED ASSIGN INTEGER SEMICOLON
+	| INT_TYPE SPEED ASSIGN INTEGER SEMICOLON
 	{ $$ = SpeedAttributeSemanticAction($4); }
 	| REPRODUCTION_STRATEGY ID[name] ASSIGN REPRODUCTION_STRATEGY DOT reproductiveStrategyValue SEMICOLON
 	{ $$ = ReproductiveStrategyAttributeSemanticAction($6); }
