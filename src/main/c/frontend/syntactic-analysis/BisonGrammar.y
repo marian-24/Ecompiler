@@ -226,7 +226,6 @@ Son reconocidos por Flex y tienen valor semántico*/
 %token <token> SEMICOLON
 %token <token> COMMA
 %token <token> DOT
-%token <token> TEMPERATURE
 
 %token <token> UNKNOWN
 
@@ -267,17 +266,10 @@ Son reconocidos por Flex y tienen valor semántico*/
 %type <expression>           expression
 %type <condition>            condition
 
-<<<<<<< Updated upstream
-%type <token> reproductiveStrategyValue
-%type <token> dietValue
-%type <token> habitatSpeciesValue
-%type <token> habitatRegionValue
-=======
 %type <token> 				 reproductiveStrategyValue
 %type <token> 				 dietValue
 %type <token> 				 habitatSpeciesValue
 %type <token> 				 habitatRegionValue
->>>>>>> Stashed changes
 
 /**
  * Precedence and associativity.
