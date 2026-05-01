@@ -1,0 +1,8 @@
+
+region Bosque {
+    temperature = 20;
+    humidity = 70;
+    altitude = 800;
+    carrying_capacity = 200;
+    habitat = habitat.terrestrial;
+}

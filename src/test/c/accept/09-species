@@ -1,0 +1,26 @@
+//Una especie con todos sus atributos
+
+species Puma = createSpecies {
+    int lifespan = 15;
+    float reproduction_rate = 0.4;
+    int speed = 8;
+    reproduction_strategy rep_strat = reproduction_strategy.k_selected;
+    diet my_diet = diet.carnivore;
+    habitat hab = habitat.terrestrial;
+    environmental_tolerance env_tol;
+    env_tol.temperature = [5, 35];
+    env_tol.humidity = [30, 80];
+    env_tol.altitude = [0, 4000];
+}
+
+species tigre = createSpecies{
+        int lifespan = 15;
+        float reproduction_rate = 0.4;
+        reproduction_strategy rep_strat = reproduction_strategy.k_strategy;
+        diet my_diet = diet.carnivore;
+        environmental_tolerance env_tol;
+        env_tol.temperature = [20, 40];
+        env_tol.humidity = [2, 5];
+        env_tol.altitude = [0,100];
+        habitat hab = habitat.terrestrial;
+}
