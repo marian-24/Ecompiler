@@ -116,6 +116,7 @@ adding them would drop the entire tree even on success!
 %token <token> HUMIDITY
 %token <token> ALTITUDE
 %token <token> CARRYING_CAPACITY
+%token <token> TEMPERATURE
 
 /**keywords- primitive types*/
 %token <token> INT
@@ -262,6 +263,11 @@ adding them would drop the entire tree even on success!
 
 %type <expression>           expression
 %type <condition>            condition
+
+%type <token> reproductiveStrategyValue
+%type <token> dietValue
+%type <token> habitatSpeciesValue
+%type <token> habitatRegionValue
 
 /**
  * Precedence and associativity.
@@ -485,10 +491,8 @@ expression: INTEGER
 	{ $$ = StringExpressionSemanticAction($1); }
 	| ID
 	{ $$ = IdentifierExpressionSemanticAction($1); }
-	| ID[object] DOT ID[attr]
-	{ $$ = AttributeAccessExpressionSemanticAction($object, $attr); }
-	| ID[ecosystem] DOT ID[region]
-	{ $$ = EcosystemAccessExpressionSemanticAction($ecosystem, $region); }
+	| ID[left] DOT ID[right]
+	{ $$ = AttributeAccessExpressionSemanticAction($left, $right); }
 	| POPULATION OF ID[species] IN ID[ecosystem] DOT ID[region]
 	{ $$ = PopulationOfExpressionSemanticAction($species, $ecosystem, $region); }
 	| RANDOM OPEN_BRACKET INTEGER[min] COMMA INTEGER[max] CLOSE_BRACKET
@@ -504,7 +508,7 @@ expression: INTEGER
 	| OPEN_PAREN expression CLOSE_PAREN
 	{ $$ = $2; }
 	;
-
+	
 /** Conditions*/
 
 condition: expression[left] LT expression[right]
