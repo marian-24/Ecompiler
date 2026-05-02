@@ -263,6 +263,9 @@ void destroyStatement(Statement * statement) {
 	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
 	if (statement != NULL) {
 		switch (statement->type) {
+			case STATEMENT_BEHAVIOR:
+				// BehaviorType is an enum, no pointers to free
+				break;
 			case STATEMENT_SPECIES:
 				destroySpeciesDefinition(statement->speciesDefinition);
 				break;
