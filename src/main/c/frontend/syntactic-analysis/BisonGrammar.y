@@ -374,14 +374,14 @@ speciesAttribute: INT_TYPE LIFESPAN ASSIGN INTEGER SEMICOLON
 	{ $$ = ReproductionRateAttributeSemanticAction($4); }
 	| INT_TYPE SPEED ASSIGN INTEGER SEMICOLON
 	{ $$ = SpeedAttributeSemanticAction($4); }
-	| REPRODUCTION_STRATEGY ID[name] ASSIGN REPRODUCTION_STRATEGY DOT reproductiveStrategyValue SEMICOLON
-	{ $$ = ReproductiveStrategyAttributeSemanticAction($6); }
-	| DIET ID[name] ASSIGN DIET DOT dietValue SEMICOLON
-	{ $$ = DietAttributeSemanticAction($6); }
-	| HABITAT ID[name] ASSIGN HABITAT DOT habitatSpeciesValue SEMICOLON
-	{ $$ = HabitatAttributeSemanticAction($6); }
-	| ENVIRONMENTAL_TOLERANCE ID[name] SEMICOLON envTolerance
-	{ $$ = EnvToleranceAttributeSemanticAction($4); }
+	| REPRODUCTION_STRATEGY ASSIGN REPRODUCTION_STRATEGY DOT reproductiveStrategyValue SEMICOLON
+	{ $$ = ReproductiveStrategyAttributeSemanticAction($5); }
+	| DIET ASSIGN DIET DOT dietValue SEMICOLON
+	{ $$ = DietAttributeSemanticAction($5); }
+	| HABITAT ASSIGN HABITAT DOT habitatSpeciesValue SEMICOLON
+	{ $$ = HabitatAttributeSemanticAction($5); }
+	| ENVIRONMENTAL_TOLERANCE SEMICOLON envTolerance
+	{ $$ = EnvToleranceAttributeSemanticAction($3); }
 	;
 
 reproductiveStrategyValue: R_SELECTED   { $$ = R_SELECTED; }
@@ -401,10 +401,10 @@ habitatSpeciesValue: TERRESTRIAL    { $$ = TERRESTRIAL; }
 	| AMPHIBIOUS                    { $$ = AMPHIBIOUS; }
 	;
 
-envTolerance: ID[name] DOT TEMPERATURE ASSIGN rangeValue SEMICOLON
-              ID[name2] DOT HUMIDITY ASSIGN rangeValue SEMICOLON
-              ID[name3] DOT ALTITUDE ASSIGN rangeValue SEMICOLON
-	{ $$ = EnvToleranceSemanticAction($5, $11, $17); }
+envTolerance: DOT TEMPERATURE ASSIGN rangeValue SEMICOLON
+              DOT HUMIDITY ASSIGN rangeValue SEMICOLON
+              DOT ALTITUDE ASSIGN rangeValue SEMICOLON
+	{ $$ = EnvToleranceSemanticAction($4, $9, $14); }
 	;
 
 rangeValue: OPEN_BRACKET INTEGER[min] COMMA INTEGER[max] CLOSE_BRACKET
