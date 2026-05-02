@@ -239,7 +239,10 @@ Son reconocidos por Flex y tienen valor semántico*/
 %type <speciesAttribute>     speciesAttribute
 %type <envTolerance>         envTolerance
 %type <rangeValue>           rangeValue
-
+%type <token> 				 reproductiveStrategyValue
+%type <token> 				 dietValue
+%type <token> 				 habitatSpeciesValue
+%type <token> 				 habitatRegionValue
 %type <regionDefinition>     regionDefinition
 
 %type <ecosystemDefinition>  ecosystemDefinition
@@ -266,10 +269,7 @@ Son reconocidos por Flex y tienen valor semántico*/
 %type <expression>           expression
 %type <condition>            condition
 
-%type <token> 				 reproductiveStrategyValue
-%type <token> 				 dietValue
-%type <token> 				 habitatSpeciesValue
-%type <token> 				 habitatRegionValue
+
 
 /**
  * Precedence and associativity.

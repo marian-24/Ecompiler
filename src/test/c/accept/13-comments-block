@@ -1,0 +1,38 @@
+/* Ecosistema con comentarios de bloque - valida que /* */ comentarios se ignoran correctamente */
+
+/*
+ * Definición de una especie carnívora depredadora
+ * Los atributos definen características ecológicas clave
+ */
+species Puma = createSpecies {
+    int lifespan = 15;  /* Vive aproximadamente 15 años */
+    float reproduction_rate = 0.4;
+    int speed = 8;
+    /* Estrategia reproductiva K: pocos descendientes, mucho cuidado parental */
+    reproduction_strategy rep_strat = reproduction_strategy.k_selected;
+    diet my_diet = diet.carnivore;  /* Cazador carnívoro */
+    habitat hab = habitat.terrestrial;
+    environmental_tolerance env_tol;
+    /* Rango de temperatura tolerable: 5°C a 35°C */
+    env_tol.temperature = [5, 35];
+    env_tol.humidity = [30, 80];
+    env_tol.altitude = [0, 4000];
+}
+
+/*
+ * Definición de la región del ecosistema
+ * Parámetros ambientales específicos
+ */
+region Bosque {
+    temperature = 20;
+    humidity = 70;
+    altitude = 800;
+    carrying_capacity = 200;  /* Máxima población soportada */
+    habitat = habitat.terrestrial;
+}
+
+/* Ecosistema completo integrado */
+ecosystem Patagonia {
+    region Bosque;  /* La única región del ecosistema */
+    species Puma;   /* La única especie del ecosistema */
+}
