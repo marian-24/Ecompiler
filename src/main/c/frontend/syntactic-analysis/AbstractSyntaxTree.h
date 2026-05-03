@@ -95,7 +95,8 @@ typedef enum SpeciesAttributeType {
 	ATTR_REPRODUCTIVE_STRATEGY,
 	ATTR_DIET,
 	ATTR_HABITAT,
-	ATTR_ENVIRONMENTAL_TOLERANCE
+	ATTR_ENVIRONMENTAL_TOLERANCE,
+	ATTR_ENERGY
 } SpeciesAttributeType;
 
 typedef enum EcosystemMemberType {
@@ -217,6 +218,7 @@ struct EnvTolerance {
 struct SpeciesAttribute {
 	SpeciesAttributeType type;
 	union {
+		double energyValue;              // float energy = N
 		int lifespanValue;               // int lifespan = N
 		double reproductionRateValue;    // float reproduction_rate = N
 		int speedValue;                  // int speed = N

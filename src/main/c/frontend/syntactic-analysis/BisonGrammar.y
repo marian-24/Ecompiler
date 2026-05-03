@@ -94,7 +94,6 @@ adding them would drop the entire tree even on success!
 Son reconocidos por Flex y tienen valor semántico*/
 %token <integer> INTEGER
 %token <decimal> FLOAT
-%token <boolean> BOOLEAN
 %token <string>  STRING
 %token <string>  ID
 
@@ -370,6 +369,8 @@ speciesAttributeList: speciesAttribute
 
 speciesAttribute: INT_TYPE LIFESPAN ASSIGN INTEGER SEMICOLON
 	{ $$ = LifespanAttributeSemanticAction($4); }
+	| FLOAT_TYPE ENERGY ASSIGN FLOAT SEMICOLON
+    { $$ = EnergyAttributeSemanticAction($4); }
 	| FLOAT_TYPE REPRODUCTION_RATE ASSIGN FLOAT SEMICOLON
 	{ $$ = ReproductionRateAttributeSemanticAction($4); }
 	| INT_TYPE SPEED ASSIGN INTEGER SEMICOLON
