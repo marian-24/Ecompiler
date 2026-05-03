@@ -59,6 +59,7 @@ SpeciesAttribute *     DietAttributeSemanticAction(TokenLabel diet);
 SpeciesAttribute *     HabitatAttributeSemanticAction(TokenLabel habitat);
 SpeciesAttribute *     EnvToleranceAttributeSemanticAction(EnvTolerance * tolerance);
 EnvTolerance *         EnvToleranceSemanticAction(RangeValue * temperature, RangeValue * humidity, RangeValue * altitude);
+SpeciesAttribute *     EnergyAttributeSemanticAction(double value);
 RangeValue *           RangeValueSemanticAction(int min, int max);
 
  // REGION
@@ -131,11 +132,10 @@ Condition * NotConditionSemanticAction(Condition * operand);
 Condition * InConditionSemanticAction(char * speciesName, char * ecosystemName, char * regionName);
 
 
+/*del proyecto base!
 Constant *   IntegerConstantSemanticAction(const int value);
 Expression * ArithmeticExpressionSemanticAction(Expression * leftExpression, Expression * rightExpression, ExpressionType type);
 Expression * FactorExpressionSemanticAction(Factor * factor);
-Factor *     ConstantFactorSemanticAction(Constant * constant);
-Factor *     ExpressionFactorSemanticAction(Expression * expression);
 Program *    ExpressionProgramSemanticAction(Expression * expression);
-
+*/
 #endif

@@ -353,7 +353,7 @@ statement: speciesDefinition
 	{ $$ = BooleanDeclarationSemanticAction($2, $4); }
 	| UNKNOWN
 	{ $$ = NULL;
-	  yyerror(&$1, "Token desconocido"); }
+	  yyerror(&yylloc, "Token desconocido"); }
 	;
 
 /**species*/
@@ -469,17 +469,17 @@ attributeAssignment: ID[object] DOT ID[attr] ASSIGN expression SEMICOLON
 	{ $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_DIV, $5); }
 	;
 
-onEncounterBlock: ON ENCOUNTER ID[speciesA] WITH ID[speciesB] IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList CLOSE_BRACE
-	{ $$ = OnEncounterBlockSemanticAction($speciesA, $speciesB, $ecosystem, $region, $12); }
-	;
+onEncounterBlock: ON ENCOUNTER ID[speciesA] WITH ID[speciesB] IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList[body] CLOSE_BRACE
+    { $$ = OnEncounterBlockSemanticAction($speciesA, $speciesB, $ecosystem, $region, $body); }
+    ;
 
-onGenerationBlock: ON GENERATION INTEGER[gen] IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList CLOSE_BRACE
-	{ $$ = OnGenerationBlockSemanticAction($gen, $ecosystem, $region, $10); }
-	;
+onGenerationBlock: ON GENERATION INTEGER[gen] IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList[body] CLOSE_BRACE
+    { $$ = OnGenerationBlockSemanticAction($gen, $ecosystem, $region, $body); }
+    ;
 
-everyRandomBlock: EVERY RANDOM GENERATIONS IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList CLOSE_BRACE
-	{ $$ = EveryRandomBlockSemanticAction($ecosystem, $region, $10); }
-	;
+everyRandomBlock: EVERY RANDOM GENERATIONS IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList[body] CLOSE_BRACE
+    { $$ = EveryRandomBlockSemanticAction($ecosystem, $region, $body); }
+    ;
 
 simulateStatement: SIMULATE ID[ecosystem] FOR INTEGER[gens] GENERATIONS SEMICOLON
 	{ $$ = SimulateStatementSemanticAction($ecosystem, $gens, 0, 0); }
@@ -487,20 +487,19 @@ simulateStatement: SIMULATE ID[ecosystem] FOR INTEGER[gens] GENERATIONS SEMICOLO
 	{ $$ = SimulateStatementSemanticAction($ecosystem, $gens, 1, $seed); }
 	;
 
-ifStatement: IF OPEN_PAREN condition CLOSE_PAREN OPEN_BRACE statementList CLOSE_BRACE
-	{ $$ = IfStatementSemanticAction($3, $6, NULL); }
-	| IF OPEN_PAREN condition CLOSE_PAREN OPEN_BRACE statementList CLOSE_BRACE ELSE OPEN_BRACE statementList CLOSE_BRACE
-	{ $$ = IfStatementSemanticAction($3, $6, $10); }
-	;
+ifStatement: IF OPEN_PAREN condition[cond] CLOSE_PAREN OPEN_BRACE statementList[then] CLOSE_BRACE
+    { $$ = IfStatementSemanticAction($cond, $then, NULL); }
+    | IF OPEN_PAREN condition[cond] CLOSE_PAREN OPEN_BRACE statementList[then] CLOSE_BRACE ELSE OPEN_BRACE statementList[els] CLOSE_BRACE
+    { $$ = IfStatementSemanticAction($cond, $then, $els); }
+    ;
 
 whileStatement: WHILE OPEN_PAREN condition CLOSE_PAREN OPEN_BRACE statementList CLOSE_BRACE
 	{ $$ = WhileStatementSemanticAction($3, $6); }
 	;
 
-forEachStatement: FOR EACH ID[species] IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList CLOSE_BRACE
-	{ $$ = ForEachStatementSemanticAction($species, $ecosystem, $region, $10); }
-	;
-
+forEachStatement: FOR EACH ID[species] IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList[body] CLOSE_BRACE
+    { $$ = ForEachStatementSemanticAction($species, $ecosystem, $region, $body); }
+    ;
 logStatement: LOG POPULATION OF ID[species] IN ID[ecosystem] DOT ID[region] SEMICOLON
 	{ $$ = LogPopulationSemanticAction($species, $ecosystem, $region); }
 	| LOG STATE OF ID[ecosystem] SEMICOLON

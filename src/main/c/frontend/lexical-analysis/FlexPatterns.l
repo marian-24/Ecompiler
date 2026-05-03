@@ -10,7 +10,7 @@
 
 %{
 
-/**
+/*
  * @see https://westes.github.io/flex/manual/Definitions-Section.html#Definitions-Section
  */
 
@@ -21,7 +21,7 @@ extern CompilationStatus ParenthesisLexemeAction(TokenLabel label);
 extern CompilationStatus SubexpressionLexemeAction();
 */
 
-/** Keywords */
+/** Keywords - Tipos de dominio*/
 extern CompilationStatus KeywordLexemeAction(TokenLabel label);
 
 /** Enum values */
@@ -79,19 +79,6 @@ identifier          {letter}{alphanumeric}*
 string              \"[^\"]*\"
 %%
 
-%{
-
-/**
- * @see https://westes.github.io/flex/manual/Rules-Section.html#Rules-Section
- */
-
-%}
-/* comments*/
-
-//"{"									{ return EnterImportExpressionLexemeAction(IMPORT_EXPRESSION); }
-//<IMPORT_EXPRESSION>[^{}]+			{ return SubexpressionLexemeAction(); }
-//<IMPORT_EXPRESSION>"}"				{ return LeaveImportExpressionLexemeAction(); }
-//<IMPORT_EXPRESSION>.				{ return UnknownLexemeAction(); }
 
 "/*"								{ return EnterMultilineCommentLexemeAction(MULTILINE_COMMENT); }
 <MULTILINE_COMMENT>"*/"				{ return LeaveMultilineCommentLexemeAction(); }
@@ -99,61 +86,144 @@ string              \"[^\"]*\"
 <MULTILINE_COMMENT>.				{ return IgnoredLexemeAction(); }
 "//"[^\n]*                          { return IgnoredLexemeAction(); }
 
-//Keywords - Domain types
+    /** keywords - dominios*/
+"species"                           { return KeywordLexemeAction(SPECIES); }
+"region"                            { return KeywordLexemeAction(REGION); }
+"ecosystem"                         { return KeywordLexemeAction(ECOSYSTEM); }
 
-//Keywords - Species attributes
+    /**Keywords - Atributos de especies*/
+"createSpecies"                     { return KeywordLexemeAction(CREATE_SPECIES); }
+"lifespan"                          { return KeywordLexemeAction(LIFESPAN); }
+"reproductionRate"                  { return KeywordLexemeAction(REPRODUCTION_RATE); }
+"speed"                             { return KeywordLexemeAction(SPEED); }
+"reproductionStrategy"              { return KeywordLexemeAction(REPRODUCTION_STRATEGY); }
+"diet"                              { return KeywordLexemeAction(DIET); }
+"habitat"                           { return KeywordLexemeAction(HABITAT); }
+"environmentalTolerance"            { return KeywordLexemeAction(ENVIRONMENTAL_TOLERANCE); }
+"energy"                            { return KeywordLexemeAction(ENERGY); }
 
-//Keywords - Region attributes
+    /**Keywords - Atributos de regiones */
+"temperature"                       { return KeywordLexemeAction(TEMPERATURE); }
+"humidity"                          { return KeywordLexemeAction(HUMIDITY); }
+"altitude"                          { return KeywordLexemeAction(ALTITUDE); }
+"carryingCapacity"                  { return KeywordLexemeAction(CARRYING_CAPACITY); }
 
-//Keywords - Primitive types
+    /**Keywords Tipos primitivos*/
+"int"                               { return KeywordLexemeAction(INT_TYPE); }
+"float"                             { return KeywordLexemeAction(FLOAT_TYPE); }
+"boolean"                           { return KeywordLexemeAction(BOOLEAN_TYPE); }
+"string"                            { return KeywordLexemeAction(STRING_TYPE); }
 
-//Keywords - Actions
+    /**Keywords - acciones*/
+"add"                               { return KeywordLexemeAction(ADD); }
+"to"                                { return KeywordLexemeAction(TO); }
+"remove"                            { return KeywordLexemeAction(REMOVE); }
+"move"                              { return KeywordLexemeAction(MOVE); }
 
-//Keywords - Encounter
+    /**Keywords - encuentros*/
+"on"                                { return KeywordLexemeAction(ON); }
+"encounter"                         { return KeywordLexemeAction(ENCOUNTER); }
+"with"                              { return KeywordLexemeAction(WITH); }
+"in"                                { return KeywordLexemeAction(IN); }
+"every"                             { return KeywordLexemeAction(EVERY); }
+"random"                            { return KeywordLexemeAction(RANDOM); }
+"generation"                        { return KeywordLexemeAction(GENERATION); }
+"generations"                       { return KeywordLexemeAction(GENERATIONS); }
 
-//Keywords - Simulation
+    /**Keywords - simulaciones*/
+"simulate"                          { return KeywordLexemeAction(SIMULATE); }
+"seed"                              { return KeywordLexemeAction(SEED); }
 
-//Keywords - Control flow
+    /**Keywords - condicionales e iteradores*/
+"if"                                { return KeywordLexemeAction(IF); }
+"else"                              { return KeywordLexemeAction(ELSE); }
+"while"                             { return KeywordLexemeAction(WHILE); }
+"for"                               { return KeywordLexemeAction(FOR); }
+"each"                              { return KeywordLexemeAction(EACH); }
 
-//Keywords - Control flow
+    /**Keywords - comportamiento predefinido*/
+"hunt"                              { return KeywordLexemeAction(HUNT); }
+"flee"                              { return KeywordLexemeAction(FLEE); }
+"ignore"                            { return KeywordLexemeAction(IGNORE); }
+"eat"                               { return KeywordLexemeAction(EAT); }
+"drink"                             { return KeywordLexemeAction(DRINK); }
+"harvest"                           { return KeywordLexemeAction(HARVEST); }
 
-//Keywords - Output
+    /**Keywords - output*/
+"log"                               { return KeywordLexemeAction(LOG); }
+"population"                        { return KeywordLexemeAction(POPULATION); }
+"of"                                { return KeywordLexemeAction(OF); }
+"state"                             { return KeywordLexemeAction(STATE); }
 
-//Enum values
+    /**enum*/
+"R_SELECTED"                        { return EnumValueLexemeAction(R_SELECTED); }
+"K_SELECTED"                        { return EnumValueLexemeAction(K_SELECTED); }
+"R_STRATEGY"                        { return EnumValueLexemeAction(R_STRATEGY); }
+"K_STRATEGY"                        { return EnumValueLexemeAction(K_STRATEGY); }
+"HERBIVORE"                         { return EnumValueLexemeAction(HERBIVORE); }
+"CARNIVORE"                         { return EnumValueLexemeAction(CARNIVORE); }
+"OMNIVORE"                          { return EnumValueLexemeAction(OMNIVORE); }
+"DECOMPOSER"                        { return EnumValueLexemeAction(DECOMPOSER); }
+"TERRESTRIAL"                       { return EnumValueLexemeAction(TERRESTRIAL); }
+"AQUATIC"                           { return EnumValueLexemeAction(AQUATIC); }
+"AMPHIBIOUS"                        { return EnumValueLexemeAction(AMPHIBIOUS); }
+"MIXED"                             { return EnumValueLexemeAction(MIXED); }
 
-//Logical operators
+    /**booleanos*/
+"true"                              { return BooleanLexemeAction(); }
+"false"                             { return BooleanLexemeAction(); }
 
-//Assignment operators
+        /**operadores, primero los de 2 caracteres!*/
+"+="                                { return AssignmentOperatorLexemeAction(ADD_ASSIGN); }
+"-="                                { return AssignmentOperatorLexemeAction(SUB_ASSIGN); }
+"*="                                { return AssignmentOperatorLexemeAction(MUL_ASSIGN); }
+"/="                                { return AssignmentOperatorLexemeAction(DIV_ASSIGN); }
+"="                                 { return AssignmentOperatorLexemeAction(ASSIGN); }
+    /**operadores relacionales*/
+"<="                                { return RelationalOperatorLexemeAction(LTE); }
+">="                                { return RelationalOperatorLexemeAction(GTE); }
+"=="                                { return RelationalOperatorLexemeAction(EQ); }
+"!="                                { return RelationalOperatorLexemeAction(NEQ); }
 
-//Relational operators
+    /**operadores, ahora los de 1 caracter*/
+"<"                                 { return RelationalOperatorLexemeAction(LT); }
+">"                                 { return RelationalOperatorLexemeAction(GT); }
+"AND"                               { return LogicalOperatorLexemeAction(AND); }
+"OR"                                { return LogicalOperatorLexemeAction(OR); }
+"NOT"                               { return LogicalOperatorLexemeAction(NOT); }
+"-"									{ return ArithmeticOperatorLexemeAction(SUB_OP); }
+"*"									{ return ArithmeticOperatorLexemeAction(MUL_OP); }
+"/"									{ return ArithmeticOperatorLexemeAction(DIV_OP); }
+"+"									{ return ArithmeticOperatorLexemeAction(ADD_OP); }
+    /**puntuacion*/
+"{"                                 { return PunctuationLexemeAction(OPEN_BRACE); }
+"}"                                 { return PunctuationLexemeAction(CLOSE_BRACE); }
+"("                                 { return PunctuationLexemeAction(OPEN_PAREN); }
+")"                                 { return PunctuationLexemeAction(CLOSE_PAREN); }
+"["                                 { return PunctuationLexemeAction(OPEN_BRACKET); }
+"]"                                 { return PunctuationLexemeAction(CLOSE_BRACKET); }
+";"                                 { return PunctuationLexemeAction(SEMICOLON); }
+","                                 { return PunctuationLexemeAction(COMMA); }
+"."                                 { return PunctuationLexemeAction(DOT); }
 
 
-//Arithmetic operators
-"-"									{ return ArithmeticOperatorLexemeAction(SUB); }
-"*"									{ return ArithmeticOperatorLexemeAction(MUL); }
-"/"									{ return ArithmeticOperatorLexemeAction(DIV); }
-"+"									{ return ArithmeticOperatorLexemeAction(ADD); }
+    /**literals*/
+{float}							    { return FloatLexemeAction(); }
+{string}							{ return StringLexemeAction(); }
+{integer}							{ return IntegerLexemeAction(); }
 
-//Punctuation
-"("									{ return ParenthesisLexemeAction(OPEN_PARENTHESIS); }
-")"									{ return ParenthesisLexemeAction(CLOSE_PARENTHESIS); }
-
-//literals
-[[:digit:]]+						{ return IntegerLexemeAction(); }
-
-//Identifiers
+    /**Identifiers*/
 {identifier}                        {return IdentifierLexemeAction();}
 
-//Whitespace and unknown
-//{whitespace}						{ return IgnoredLexemeAction(); }
-[[:space:]]+                        { return IgnoredLexemeAction(); }
+    /**Whitespace and unknown*/
+{whitespace}						{ return IgnoredLexemeAction(); }
 .									{ return UnknownLexemeAction(); }
 
 <<EOF>>								{ return EOFLexemeAction(); }
 
 %%
 
-/**
+/***
  * @see https://westes.github.io/flex/manual/User-Code-Section.html#User-Code-Section
  */
 

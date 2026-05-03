@@ -15,4 +15,18 @@
 /** Initialize module's internal state. */
 ModuleDestructor initializeFlexActionsModule();
 
+
+CompilationStatus KeywordLexemeAction(TokenLabel label);
+CompilationStatus EnumValueLexemeAction(TokenLabel label);
+CompilationStatus AssignmentOperatorLexemeAction(TokenLabel label);
+CompilationStatus RelationalOperatorLexemeAction(TokenLabel label);
+CompilationStatus LogicalOperatorLexemeAction(TokenLabel label);
+CompilationStatus PunctuationLexemeAction(TokenLabel label);
+CompilationStatus IntegerLexemeAction();
+CompilationStatus FloatLexemeAction();
+CompilationStatus BooleanLexemeAction();
+CompilationStatus StringLexemeAction();
+CompilationStatus IdentifierLexemeAction();
+CompilationStatus CommentLexemeAction();
+CompilationStatus LeaveMultilineCommentLexemeAction();
 #endif

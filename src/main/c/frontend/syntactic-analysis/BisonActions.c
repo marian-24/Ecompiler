@@ -296,6 +296,13 @@ SpeciesAttribute * EnvToleranceAttributeSemanticAction(EnvTolerance * tolerance)
 	return attr;
 }
 
+SpeciesAttribute * EnergyAttributeSemanticAction(double value) {
+    SpeciesAttribute * attr = calloc(1, sizeof(SpeciesAttribute));
+    attr->type = ATTR_ENERGY;
+    attr->energyValue = value;
+    return attr;
+}
+
 EnvTolerance * EnvToleranceSemanticAction(RangeValue * temperature, RangeValue * humidity, RangeValue * altitude) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	EnvTolerance * tolerance = calloc(1, sizeof(EnvTolerance));
@@ -618,27 +625,30 @@ Condition * InConditionSemanticAction(char * speciesName, char * ecosystemName, 
 	return cond;
 }
 
+/* del proyecto base!
 Constant * IntegerConstantSemanticAction(const int value) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	Constant * constant = calloc(1, sizeof(Constant));
 	constant->value = value;
 	return constant;
-}
+}*/
 
+/* del proyecto base!
 Expression * ArithmeticExpressionSemanticAction(Expression * leftExpression, Expression * rightExpression, ExpressionType type) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	return BinaryExpressionSemanticAction(leftExpression, rightExpression, type);
-}
-
+}*/
+ 
+/* dedl proecto base
 Expression * FactorExpressionSemanticAction(Factor * factor) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	Expression * expression = calloc(1, sizeof(Expression));
 	expression->factor = factor;
 	expression->type = FACTOR;
 	return expression;
-}
+}*/
 
-Factor * ConstantFactorSemanticAction(Constant * constant) {
+/*Factor * ConstantFactorSemanticAction(Constant * constant) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	Factor * factor = calloc(1, sizeof(Factor));
 	factor->constant = constant;
@@ -660,4 +670,4 @@ Program * ExpressionProgramSemanticAction(Expression * expression) {
 	program->expression = expression;
 	_compilerState->abstractSyntaxtTree = program;
 	return program;
-}
+}*/

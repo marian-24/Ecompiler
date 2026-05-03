@@ -4,7 +4,7 @@
 
 static Logger * _logger = NULL;
 
-/** Shutdown module's internal state. */
+/** Shutdown module's internal state. 
 void _shutdownCalculatorModule() {
 	if (_logger != NULL) {
 		logDebugging(_logger, "Destroying module: Calculator...");
@@ -16,19 +16,19 @@ void _shutdownCalculatorModule() {
 ModuleDestructor initializeCalculatorModule() {
 	_logger = createLogger("Calculator");
 	return _shutdownCalculatorModule;
-}
+}*/
 
-/** PRIVATE FUNCTIONS */
+/** PRIVATE FUNCTIONS
 
 static BinaryOperator _expressionTypeToBinaryOperator(const ExpressionType type);
 static ComputationResult _invalidBinaryOperator(const int x, const int y);
 static ComputationResult _invalidComputation();
-
+*/
 /**
  * Converts and expression type to the proper binary operator. If that's not
  * possible, returns a binary operator that always returns an invalid
  * computation result.
- */
+ 
 static BinaryOperator _expressionTypeToBinaryOperator(const ExpressionType type) {
 	switch (type) {
 		case ADDITION: return add;
@@ -39,27 +39,27 @@ static BinaryOperator _expressionTypeToBinaryOperator(const ExpressionType type)
 			logError(_logger, "The specified expression type cannot be converted into character: %d", type);
 			return _invalidBinaryOperator;
 	}
-}
+}*/
 
 /**
  * A binary operator that always returns an invalid computation result.
- */
+ 
 static ComputationResult _invalidBinaryOperator(const int x, const int y) {
 	return _invalidComputation();
-}
+}*/
 
 /**
  * A computation that always returns an invalid result.
- */
+ 
 static ComputationResult _invalidComputation() {
 	ComputationResult computationResult = {
 		.succeeded = false,
 		.value = 0
 	};
 	return computationResult;
-}
+}*/
 
-/** PUBLIC FUNCTIONS */
+/** PUBLIC FUNCTIONS 
 
 ComputationResult add(const int leftAddend, const int rightAddend) {
 	ComputationResult computationResult = {
@@ -142,4 +142,4 @@ ComputationResult computeFactor(Factor * factor) {
 ComputationResult executeCalculator(CompilerState * compilerState) {
 	Program * program = compilerState->abstractSyntaxtTree;
 	return computeExpression(program->expression);
-}
+}*/

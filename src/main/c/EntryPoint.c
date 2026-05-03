@@ -1,5 +1,5 @@
 #include "backend/code-generation/Generator.h"
-#include "backend/domain-specific/Calculator.h"
+//#include "backend/domain-specific/Calculator.h"
 #include "frontend/Frontend.h"
 #include "frontend/lexical-analysis/FlexActions.h"
 #include "frontend/syntactic-analysis/BisonActions.h"
@@ -21,14 +21,14 @@ const int main(const int length, const char ** arguments) {
 	}
 	CompilerState compilerState = {
 		.abstractSyntaxtTree = NULL,
-		.value = 0
+		.succeeded = 0 
 	};
 	ModuleDestructor moduleDestructors[] = {
 		initializeAbstractSyntaxTreeModule(),
 		initializeFlexActionsModule(lexicalAnalyzer),
 		initializeBisonActionsModule(&compilerState),
 		initializeFrontendModule(lexicalAnalyzer),
-		initializeCalculatorModule(),
+		/*initializeCalculatorModule(),*/
 		initializeGeneratorModule()
 	};
 	CompilationStatus compilationStatus = executeSyntacticAnalysis();
