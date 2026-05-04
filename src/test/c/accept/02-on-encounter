@@ -1,37 +1,37 @@
-//on encounter con primitivas de modificación de atributos
+//on encounter con primitivas de modificacion de atributos
 
 species Puma = createSpecies {
     int lifespan = 15;
-    float reproduction_rate = 0.4;
+    float reproductionRate = 0.4;
     int speed = 8;
-    reproduction_strategy rep_strat = reproduction_strategy.K_SELECTED;
-    diet my_diet = diet.CARNIVORE;
-    habitat hab = habitat.TERRESTRIAL;
-    environmental_tolerance env_tol;
-    env_tol.temperature = [5, 35];
-    env_tol.humidity = [30, 80];
-    env_tol.altitude = [0, 4000];
+    reproductionStrategy = reproductionStrategy.K_SELECTED;
+    diet = diet.CARNIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [5, 35];
+    .humidity = [30, 80];
+    .altitude = [0, 4000];
 }
 
 species Guanaco = createSpecies {
     int lifespan = 8;
-    float reproduction_rate = 0.5;
+    float reproductionRate = 0.5;
     int speed = 6;
-    reproduction_strategy rep_strat = reproduction_strategy.r_selected;
-    diet my_diet = diet.herbivore;
-    habitat hab = habitat.terrestrial;
-    environmental_tolerance env_tol;
-    env_tol.temperature = [0, 40];
-    env_tol.humidity = [20, 90];
-    env_tol.altitude = [0, 5000];
+    reproductionStrategy = reproductionStrategy.R_SELECTED;
+    diet = diet.HERBIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [0, 40];
+    .humidity = [20, 90];
+    .altitude = [0, 5000];
 }
 
 region Bosque {
     temperature = 20;
     humidity = 70;
     altitude = 800;
-    carrying_capacity = 200;
-    habitat = habitat.terrestrial;
+    carryingCapacity = 200;
+    habitat = TERRESTRIAL;
 }
 
 ecosystem Patagonia {

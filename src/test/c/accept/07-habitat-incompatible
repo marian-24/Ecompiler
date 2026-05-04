@@ -1,4 +1,4 @@
-//Usar el operador in dentro de un condicional
+//Especie terrestre en region acuatica (mayor mortalidad)
 
 species Puma = createSpecies {
     int lifespan = 15;
@@ -13,21 +13,19 @@ species Puma = createSpecies {
     .altitude = [0, 4000];
 }
 
-region Bosque {
-    temperature = 20;
-    humidity = 70;
-    altitude = 800;
-    carryingCapacity = 200;
-    habitat = TERRESTRIAL;
+region Lago {
+    temperature = 15;
+    humidity = 90;
+    altitude = 200;
+    carryingCapacity = 100;
+    habitat = AQUATIC;
 }
 
 ecosystem Patagonia {
-    region Bosque;
+    region Lago;
     species Puma;
 }
 
-add 10 Puma to Patagonia.Bosque;
-
-if (Puma in Patagonia.Bosque) {
-    log population of Puma in Patagonia.Bosque;
-}
+add 10 Puma to Patagonia.Lago;
+simulate Patagonia for 20 generations;
+log population of Puma in Patagonia.Lago;

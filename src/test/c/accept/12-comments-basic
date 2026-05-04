@@ -1,30 +1,30 @@
-//Ecosistema con comentarios de línea - valida que // comentarios se ignoran correctamente
+//Ecosistema con comentarios de linea - valida que // comentarios se ignoran correctamente
 
-// Definición de una especie carnívora depredadora
+// Definicion de una especie carnivora depredadora
 species Puma = createSpecies {
     int lifespan = 15;
-    float reproduction_rate = 0.4;  // tasa de reproducción moderada
-    int speed = 8;  // depredador rápido
-    reproduction_strategy rep_strat = reproduction_strategy.k_selected;  // estrategia K
-    diet my_diet = diet.carnivore;  // carnívoro
-    habitat hab = habitat.terrestrial;  // terrestre
-    environmental_tolerance env_tol;
-    env_tol.temperature = [5, 35];  // tolera temperaturas templadas
-    env_tol.humidity = [30, 80];  // rango de humedad
-    env_tol.altitude = [0, 4000];  // hasta 4000 metros
+    float reproductionRate = 0.4;  // tasa de reproduccion moderada
+    int speed = 8;  // depredador rapido
+    reproductionStrategy = reproductionStrategy.K_SELECTED;  // estrategia K
+    diet = diet.CARNIVORE;  // carnivoro
+    habitat = habitat.TERRESTRIAL;  // terrestre
+    environmentalTolerance;
+    .temperature = [5, 35];  // tolera temperaturas templadas
+    .humidity = [30, 80];  // rango de humedad
+    .altitude = [0, 4000];  // hasta 4000 metros
 }
 
-// Definición de la región geográfica
+// Definicion de la region geografica
 region Bosque {
     temperature = 20;  // temperatura promedio
-    humidity = 70;  // muy húmedo
-    altitude = 800;  // región montañosa baja
-    carrying_capacity = 200;  // máximo 200 individuos
-    habitat = habitat.terrestrial;
+    humidity = 70;  // muy humedo
+    altitude = 800;  // region montana baja
+    carryingCapacity = 200;  // maximo 200 individuos
+    habitat = TERRESTRIAL;
 }
 
-// Definición del ecosistema completo
+// Definicion del ecosistema completo
 ecosystem Patagonia {
-    region Bosque;  // incluye región bosque
+    region Bosque;  // incluye region bosque
     species Puma;  // incluye especie Puma
 }

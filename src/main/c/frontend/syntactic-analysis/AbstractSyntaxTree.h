@@ -184,21 +184,24 @@ struct Expression {
 };
  
  
- //condition node
 struct Condition {
-	ConditionType type;
-	union {
-		struct {
-			Expression * left;
-			Expression * right;
-		} binary;                        // left OP right
-		struct {
-			char * speciesName;
-			char * ecosystemName;
-			char * regionName;
-		} inOperator;                    // Especie in Ecosistema.Region
-		Condition * operand;             // NOT condition
-	};
+    ConditionType type;
+    union {
+        struct {
+            Expression * left;
+            Expression * right;
+        } binary;                        // left RELATIONAL_OP right (LT, GT, EQ, NEQ, LTE, GTE)
+        struct {
+            Condition * left;
+            Condition * right;
+        } logical;                       // left LOGICAL_OP right (AND, OR)
+        struct {
+            char * speciesName;
+            char * ecosystemName;
+            char * regionName;
+        } inOperator;                    // Especie in Ecosistema.Region
+        Condition * operand;             // NOT condition
+    };
 };
 
  //range value

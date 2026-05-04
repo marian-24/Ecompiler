@@ -134,6 +134,14 @@ void destroyToken(Token * token) {
 			token->lexeme = NULL;
 		}
 		if (token->semanticValue != NULL) {
+			// For STRING tokens, free the string (it was strdup'd)
+			// For ID tokens, DON'T free it (it points to lexeme which is freed above)
+			if (token->label == STRING) {
+				if (token->semanticValue->string != NULL) {
+					free(token->semanticValue->string);
+					token->semanticValue->string = NULL;
+				}
+			}
 			free(token->semanticValue);
 			token->semanticValue = NULL;
 		}

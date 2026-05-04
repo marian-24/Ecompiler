@@ -283,6 +283,9 @@ Son reconocidos por Flex y tienen valor semántico*/
 %left ADD_OP SUB_OP
 %left MUL_OP DIV_OP
 
+%precedence "then"
+%precedence ELSE
+
 %%
 
 // IMPORTANT: To use λ in the following grammar, use the %empty symbol.
@@ -370,7 +373,7 @@ speciesAttributeList: speciesAttribute
 speciesAttribute: INT_TYPE LIFESPAN ASSIGN INTEGER SEMICOLON
 	{ $$ = LifespanAttributeSemanticAction($4); }
 	| FLOAT_TYPE ENERGY ASSIGN FLOAT SEMICOLON
-    { $$ = EnergyAttributeSemanticAction($4); }
+	{ $$ = EnergyAttributeSemanticAction($4); }
 	| FLOAT_TYPE REPRODUCTION_RATE ASSIGN FLOAT SEMICOLON
 	{ $$ = ReproductionRateAttributeSemanticAction($4); }
 	| INT_TYPE SPEED ASSIGN INTEGER SEMICOLON
@@ -383,6 +386,12 @@ speciesAttribute: INT_TYPE LIFESPAN ASSIGN INTEGER SEMICOLON
 	{ $$ = HabitatAttributeSemanticAction($5); }
 	| ENVIRONMENTAL_TOLERANCE SEMICOLON envTolerance
 	{ $$ = EnvToleranceAttributeSemanticAction($3); }
+	;
+
+envTolerance: DOT TEMPERATURE ASSIGN rangeValue SEMICOLON
+              DOT HUMIDITY ASSIGN rangeValue SEMICOLON
+              DOT ALTITUDE ASSIGN rangeValue SEMICOLON
+	{ $$ = EnvToleranceSemanticAction($4, $9, $14); }
 	;
 
 reproductiveStrategyValue: R_SELECTED   { $$ = R_SELECTED; }
@@ -400,12 +409,6 @@ dietValue: HERBIVORE    { $$ = HERBIVORE; }
 habitatSpeciesValue: TERRESTRIAL    { $$ = TERRESTRIAL; }
 	| AQUATIC                       { $$ = AQUATIC; }
 	| AMPHIBIOUS                    { $$ = AMPHIBIOUS; }
-	;
-
-envTolerance: DOT TEMPERATURE ASSIGN rangeValue SEMICOLON
-              DOT HUMIDITY ASSIGN rangeValue SEMICOLON
-              DOT ALTITUDE ASSIGN rangeValue SEMICOLON
-	{ $$ = EnvToleranceSemanticAction($4, $9, $14); }
 	;
 
 rangeValue: OPEN_BRACKET INTEGER[min] COMMA INTEGER[max] CLOSE_BRACKET
@@ -458,16 +461,34 @@ moveStatement: MOVE ID[species] TO ID[ecosystem] DOT ID[region] SEMICOLON
 
 /**attribute*/
 attributeAssignment: ID[object] DOT ID[attr] ASSIGN expression SEMICOLON
-	{ $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_SIMPLE, $5); }
-	| ID[object] DOT ID[attr] ADD_ASSIGN expression SEMICOLON
-	{ $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_ADD, $5); }
-	| ID[object] DOT ID[attr] SUB_ASSIGN expression SEMICOLON
-	{ $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_SUB, $5); }
-	| ID[object] DOT ID[attr] MUL_ASSIGN expression SEMICOLON
-	{ $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_MUL, $5); }
-	| ID[object] DOT ID[attr] DIV_ASSIGN expression SEMICOLON
-	{ $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_DIV, $5); }
-	;
+    { $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_SIMPLE, $5); }
+    | ID[object] DOT ID[attr] ADD_ASSIGN expression SEMICOLON
+    { $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_ADD, $5); }
+    | ID[object] DOT ID[attr] SUB_ASSIGN expression SEMICOLON
+    { $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_SUB, $5); }
+    | ID[object] DOT ID[attr] MUL_ASSIGN expression SEMICOLON
+    { $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_MUL, $5); }
+    | ID[object] DOT ID[attr] DIV_ASSIGN expression SEMICOLON
+    { $$ = AttributeAssignmentSemanticAction($object, $attr, ASSIGN_DIV, $5); }
+    | TEMPERATURE ADD_ASSIGN expression SEMICOLON
+    { char * _obj = strdup(""); char * _attr = strdup("temperature"); $$ = AttributeAssignmentSemanticAction(_obj, _attr, ASSIGN_ADD, $3); }
+    | TEMPERATURE SUB_ASSIGN expression SEMICOLON
+    { char * _obj = strdup(""); char * _attr = strdup("temperature"); $$ = AttributeAssignmentSemanticAction(_obj, _attr, ASSIGN_SUB, $3); }
+    | HUMIDITY ADD_ASSIGN expression SEMICOLON
+    { char * _obj = strdup(""); char * _attr = strdup("humidity"); $$ = AttributeAssignmentSemanticAction(_obj, _attr, ASSIGN_ADD, $3); }
+    | HUMIDITY SUB_ASSIGN expression SEMICOLON
+    { char * _obj = strdup(""); char * _attr = strdup("humidity"); $$ = AttributeAssignmentSemanticAction(_obj, _attr, ASSIGN_SUB, $3); }
+    | ID[object] DOT ENERGY ASSIGN expression SEMICOLON
+    { char * _attr = strdup("energy"); $$ = AttributeAssignmentSemanticAction($object, _attr, ASSIGN_SIMPLE, $5); }
+    | ID[object] DOT ENERGY ADD_ASSIGN expression SEMICOLON
+    { char * _attr = strdup("energy"); $$ = AttributeAssignmentSemanticAction($object, _attr, ASSIGN_ADD, $5); }
+    | ID[object] DOT ENERGY SUB_ASSIGN expression SEMICOLON
+    { char * _attr = strdup("energy"); $$ = AttributeAssignmentSemanticAction($object, _attr, ASSIGN_SUB, $5); }
+    | ID[object] DOT ENERGY MUL_ASSIGN expression SEMICOLON
+    { char * _attr = strdup("energy"); $$ = AttributeAssignmentSemanticAction($object, _attr, ASSIGN_MUL, $5); }
+    | ID[object] DOT ENERGY DIV_ASSIGN expression SEMICOLON
+    { char * _attr = strdup("energy"); $$ = AttributeAssignmentSemanticAction($object, _attr, ASSIGN_DIV, $5); }
+    ;
 
 onEncounterBlock: ON ENCOUNTER ID[speciesA] WITH ID[speciesB] IN ID[ecosystem] DOT ID[region] OPEN_BRACE statementList[body] CLOSE_BRACE
     { $$ = OnEncounterBlockSemanticAction($speciesA, $speciesB, $ecosystem, $region, $body); }
@@ -487,7 +508,7 @@ simulateStatement: SIMULATE ID[ecosystem] FOR INTEGER[gens] GENERATIONS SEMICOLO
 	{ $$ = SimulateStatementSemanticAction($ecosystem, $gens, 1, $seed); }
 	;
 
-ifStatement: IF OPEN_PAREN condition[cond] CLOSE_PAREN OPEN_BRACE statementList[then] CLOSE_BRACE
+ifStatement: IF OPEN_PAREN condition[cond] CLOSE_PAREN OPEN_BRACE statementList[then] CLOSE_BRACE %prec "then"
     { $$ = IfStatementSemanticAction($cond, $then, NULL); }
     | IF OPEN_PAREN condition[cond] CLOSE_PAREN OPEN_BRACE statementList[then] CLOSE_BRACE ELSE OPEN_BRACE statementList[els] CLOSE_BRACE
     { $$ = IfStatementSemanticAction($cond, $then, $els); }
@@ -522,6 +543,14 @@ expression: INTEGER
 	{ $$ = IdentifierExpressionSemanticAction($1); }
 	| ID[left] DOT ID[right]
 	{ $$ = AttributeAccessExpressionSemanticAction($left, $right); }
+	| ID[left] DOT ENERGY
+	{ char * _attr = strdup("energy"); $$ = AttributeAccessExpressionSemanticAction($left, _attr); }
+	| ID[left] DOT SPEED
+	{ char * _attr = strdup("speed"); $$ = AttributeAccessExpressionSemanticAction($left, _attr); }
+	| ID[left] DOT LIFESPAN
+	{ char * _attr = strdup("lifespan"); $$ = AttributeAccessExpressionSemanticAction($left, _attr); }
+	| ID[left] DOT REPRODUCTION_RATE
+	{ char * _attr = strdup("reproductionRate"); $$ = AttributeAccessExpressionSemanticAction($left, _attr); }
 	| POPULATION OF ID[species] IN ID[ecosystem] DOT ID[region]
 	{ $$ = PopulationOfExpressionSemanticAction($species, $ecosystem, $region); }
 	| RANDOM OPEN_BRACKET INTEGER[min] COMMA INTEGER[max] CLOSE_BRACKET
@@ -537,7 +566,7 @@ expression: INTEGER
 	| OPEN_PAREN expression CLOSE_PAREN
 	{ $$ = $2; }
 	;
-	
+
 /** Conditions*/
 
 condition: expression[left] LT expression[right]

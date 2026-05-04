@@ -80,10 +80,11 @@ string              \"[^\"]*\"
 %%
 
 
-"/*"								{ return EnterMultilineCommentLexemeAction(MULTILINE_COMMENT); }
-<MULTILINE_COMMENT>"*/"				{ return LeaveMultilineCommentLexemeAction(); }
-<MULTILINE_COMMENT>[^*]+			{ return IgnoredLexemeAction(); }
-<MULTILINE_COMMENT>.				{ return IgnoredLexemeAction(); }
+"/*"                                { return EnterMultilineCommentLexemeAction(MULTILINE_COMMENT); }
+<MULTILINE_COMMENT>"*/"             { return LeaveMultilineCommentLexemeAction(); }
+<MULTILINE_COMMENT>"/*"             { return IgnoredLexemeAction(); }
+<MULTILINE_COMMENT>[^*]+            { return IgnoredLexemeAction(); }
+<MULTILINE_COMMENT>.                { return IgnoredLexemeAction(); }
 "//"[^\n]*                          { return IgnoredLexemeAction(); }
 
     /** keywords - dominios*/

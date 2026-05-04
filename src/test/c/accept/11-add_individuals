@@ -1,4 +1,4 @@
-//Usar el operador in dentro de un condicional
+//Agregar individuos de una especie a una region
 
 species Puma = createSpecies {
     int lifespan = 15;
@@ -27,7 +27,3 @@ ecosystem Patagonia {
 }
 
 add 10 Puma to Patagonia.Bosque;
-
-if (Puma in Patagonia.Bosque) {
-    log population of Puma in Patagonia.Bosque;
-}

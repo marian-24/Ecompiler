@@ -63,31 +63,34 @@ void destroyExpression(Expression * expression) {
 }
 
 void destroyCondition(Condition * condition) {
-	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
-	if (condition != NULL) {
-		switch (condition->type) {
-			case COND_LT:
-			case COND_GT:
-			case COND_EQ:
-			case COND_NEQ:
-			case COND_LTE:
-			case COND_GTE:
-			case COND_AND:
-			case COND_OR:
-				destroyExpression(condition->binary.left);
-				destroyExpression(condition->binary.right);
-				break;
-			case COND_NOT:
-				destroyCondition(condition->operand);
-				break;
-			case COND_IN:
-				free(condition->inOperator.speciesName);
-				free(condition->inOperator.ecosystemName);
-				free(condition->inOperator.regionName);
-				break;
-		}
-		free(condition);
-	}
+    logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
+    if (condition != NULL) {
+        switch (condition->type) {
+            case COND_LT:
+            case COND_GT:
+            case COND_EQ:
+            case COND_NEQ:
+            case COND_LTE:
+            case COND_GTE:
+                destroyExpression(condition->binary.left);
+                destroyExpression(condition->binary.right);
+                break;
+            case COND_AND:
+            case COND_OR:
+                destroyCondition(condition->logical.left);
+                destroyCondition(condition->logical.right);
+                break;
+            case COND_NOT:
+                destroyCondition(condition->operand);
+                break;
+            case COND_IN:
+                free(condition->inOperator.speciesName);
+                free(condition->inOperator.ecosystemName);
+                free(condition->inOperator.regionName);
+                break;
+        }
+        free(condition);
+    }
 }
 
 //

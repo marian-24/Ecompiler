@@ -1,4 +1,4 @@
-// Ecosistema con una región y una especie
+// Ecosistema con una region y una especie
 
 species Puma = createSpecies {
     int lifespan = 15;

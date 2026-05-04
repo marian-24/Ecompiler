@@ -227,6 +227,7 @@ SpeciesDefinition * SpeciesDefinitionSemanticAction(char * name, SpeciesAttribut
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	SpeciesDefinition * species = calloc(1, sizeof(SpeciesDefinition));
 	species->name       = strdup(name);
+	free(name);
 	species->attributes = attributes;
 	return species;
 }
@@ -329,6 +330,7 @@ RegionDefinition * RegionDefinitionSemanticAction(char * name, int temperature, 
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	RegionDefinition * region = calloc(1, sizeof(RegionDefinition));
 	region->name             = strdup(name);
+	free(name);
 	region->temperature      = temperature;
 	region->humidity         = humidity;
 	region->altitude         = altitude;
@@ -337,11 +339,11 @@ RegionDefinition * RegionDefinitionSemanticAction(char * name, int temperature, 
 	return region;
 }
 
-
 EcosystemDefinition * EcosystemDefinitionSemanticAction(char * name, EcosystemMemberList * members) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	EcosystemDefinition * ecosystem = calloc(1, sizeof(EcosystemDefinition));
 	ecosystem->name    = strdup(name);
+	free(name);
 	ecosystem->members = members;
 	return ecosystem;
 }
@@ -359,25 +361,26 @@ EcosystemMember * EcosystemMemberSemanticAction(EcosystemMemberType type, char *
 	EcosystemMember * member = calloc(1, sizeof(EcosystemMember));
 	member->type = type;
 	member->name = strdup(name);
+	free(name);
 	return member;
 }
 
-
 AddStatement * AddStatementSemanticAction(int amount, char * speciesName,
                                            char * ecosystemName, char * regionName) {
-	_logSyntacticAnalyzerAction(__FUNCTION__);
-	AddStatement * stmt = calloc(1, sizeof(AddStatement));
-	stmt->amount        = amount;
-	stmt->speciesName   = strdup(speciesName);
-	stmt->ecosystemName = strdup(ecosystemName);
-	stmt->regionName    = strdup(regionName);
-	return stmt;
+    _logSyntacticAnalyzerAction(__FUNCTION__);
+    AddStatement * stmt = calloc(1, sizeof(AddStatement));
+    stmt->amount        = amount;
+    stmt->speciesName   = strdup(speciesName);   free(speciesName);
+    stmt->ecosystemName = strdup(ecosystemName); free(ecosystemName);
+    stmt->regionName    = strdup(regionName);    free(regionName);
+    return stmt;
 }
 
 RemoveStatement * RemoveStatementSemanticAction(char * speciesName) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	RemoveStatement * stmt = calloc(1, sizeof(RemoveStatement));
 	stmt->speciesName = strdup(speciesName);
+	free(speciesName);
 	return stmt;
 }
 
@@ -387,6 +390,9 @@ MoveStatement * MoveStatementSemanticAction(char * speciesName, char * ecosystem
 	stmt->speciesName   = strdup(speciesName);
 	stmt->ecosystemName = strdup(ecosystemName);
 	stmt->regionName    = strdup(regionName);
+	free(speciesName);
+	free(ecosystemName);
+	free(regionName);
 	return stmt;
 }
 
@@ -399,6 +405,8 @@ AttributeAssignment * AttributeAssignmentSemanticAction(char * objectName, char 
 	assignment->attributeName = strdup(attributeName);
 	assignment->op            = op;
 	assignment->value         = value;
+	free(objectName);
+	free(attributeName);
 	return assignment;
 }
 
@@ -413,6 +421,10 @@ OnEncounterBlock * OnEncounterBlockSemanticAction(char * speciesA, char * specie
 	block->ecosystemName = strdup(ecosystemName);
 	block->regionName   = strdup(regionName);
 	block->body         = body;
+	free(speciesA);
+	free(speciesB);
+	free(ecosystemName);
+	free(regionName);
 	return block;
 }
 
@@ -424,6 +436,8 @@ OnGenerationBlock * OnGenerationBlockSemanticAction(int generationNumber, char *
 	block->ecosystemName    = strdup(ecosystemName);
 	block->regionName       = strdup(regionName);
 	block->body             = body;
+	free(ecosystemName);
+	free(regionName);
 	return block;
 }
 
@@ -434,6 +448,8 @@ EveryRandomBlock * EveryRandomBlockSemanticAction(char * ecosystemName, char * r
 	block->ecosystemName = strdup(ecosystemName);
 	block->regionName    = strdup(regionName);
 	block->body          = body;
+	free(ecosystemName);
+	free(regionName);
 	return block;
 }
 
@@ -446,6 +462,7 @@ SimulateStatement * SimulateStatementSemanticAction(char * ecosystemName, int ge
 	stmt->generations   = generations;
 	stmt->hasSeed       = hasSeed;
 	stmt->seedValue     = seedValue;
+	free(ecosystemName);
 	return stmt;
 }
 
@@ -476,6 +493,9 @@ ForEachStatement * ForEachStatementSemanticAction(char * speciesName, char * eco
 	stmt->ecosystemName = strdup(ecosystemName);
 	stmt->regionName    = strdup(regionName);
 	stmt->body          = body;
+	free(speciesName);
+	free(ecosystemName);
+	free(regionName);
 	return stmt;
 }
 
@@ -487,6 +507,9 @@ LogStatement * LogPopulationSemanticAction(char * speciesName, char * ecosystemN
 	stmt->speciesName   = strdup(speciesName);
 	stmt->ecosystemName = strdup(ecosystemName);
 	stmt->regionName    = strdup(regionName);
+	free(speciesName);
+	free(ecosystemName);
+	free(regionName);
 	return stmt;
 }
 
@@ -497,6 +520,7 @@ LogStatement * LogStateSemanticAction(char * ecosystemName) {
 	stmt->speciesName   = NULL;
 	stmt->ecosystemName = strdup(ecosystemName);
 	stmt->regionName    = NULL;
+	free(ecosystemName);
 	return stmt;
 }
 
@@ -539,6 +563,7 @@ Expression * StringExpressionSemanticAction(char * value) {
 	Expression * expr = calloc(1, sizeof(Expression));
 	expr->type        = EXPR_STRING;
 	expr->stringValue = strdup(value);
+	free(value);
 	return expr;
 }
 
@@ -547,6 +572,7 @@ Expression * IdentifierExpressionSemanticAction(char * name) {
 	Expression * expr = calloc(1, sizeof(Expression));
 	expr->type       = EXPR_IDENTIFIER;
 	expr->identifier = strdup(name);
+	free(name);
 	return expr;
 }
 
@@ -556,6 +582,8 @@ Expression * AttributeAccessExpressionSemanticAction(char * objectName, char * a
 	expr->type                          = EXPR_ATTRIBUTE_ACCESS;
 	expr->attributeAccess.objectName    = strdup(objectName);
 	expr->attributeAccess.attributeName = strdup(attributeName);
+	free(objectName);
+	free(attributeName);
 	return expr;
 }
 
@@ -567,6 +595,9 @@ Expression * PopulationOfExpressionSemanticAction(char * speciesName, char * eco
 	expr->populationOf.speciesName   = strdup(speciesName);
 	expr->populationOf.ecosystemName = strdup(ecosystemName);
 	expr->populationOf.regionName    = strdup(regionName);
+	free(speciesName);
+	free(ecosystemName);
+	free(regionName);
 	return expr;
 }
 
@@ -598,13 +629,12 @@ Condition * BinaryConditionSemanticAction(Expression * left, Expression * right,
 }
 
 Condition * LogicalConditionSemanticAction(Condition * left, Condition * right, ConditionType type) {
-	_logSyntacticAnalyzerAction(__FUNCTION__);
-
-	Condition * cond = calloc(1, sizeof(Condition));
-	cond->type         = type;
-	cond->binary.left  = (Expression *) left;
-	cond->binary.right = (Expression *) right;
-	return cond;
+    _logSyntacticAnalyzerAction(__FUNCTION__);
+    Condition * cond = calloc(1, sizeof(Condition));
+    cond->type          = type;
+    cond->logical.left  = left;
+    cond->logical.right = right;
+    return cond;
 }
 
 Condition * NotConditionSemanticAction(Condition * operand) {
@@ -622,6 +652,9 @@ Condition * InConditionSemanticAction(char * speciesName, char * ecosystemName, 
 	cond->inOperator.speciesName     = strdup(speciesName);
 	cond->inOperator.ecosystemName   = strdup(ecosystemName);
 	cond->inOperator.regionName      = strdup(regionName);
+	free(speciesName);
+	free(ecosystemName);
+	free(regionName);
 	return cond;
 }
 
