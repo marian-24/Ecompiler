@@ -6,11 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
-  Represents a single living individual of a species inside a region.
-  energy is per-individual and mutable 
-  age is incremented each generation; death occurs when age >= species.lifespan.
- */
 typedef struct Individual {
     char * speciesName;
     double energy;
@@ -18,10 +13,6 @@ typedef struct Individual {
     struct Individual * next;
 } Individual;
 
-/*
-  Runtime copy of a SpeciesDefinition. 
-  Shared across all individuals of this species, do not mutate after setup.
- */
 typedef struct RuntimeSpecies {
     char * name;
     int lifespan;
@@ -35,10 +26,7 @@ typedef struct RuntimeSpecies {
     struct RuntimeSpecies * next;
 } RuntimeSpecies;
 
-/*
-  Runtime state of a region. Environmental attributes
-  are mutable, on generation and every random blocks can modify them.
- */
+
 typedef struct RuntimeRegion {
     char * name;
     int temperature;
@@ -50,10 +38,6 @@ typedef struct RuntimeRegion {
     struct RuntimeRegion * next;
 } RuntimeRegion;
 
-/*
-  Runtime state of an ecosystem.
- Holds the live regions and the species registered in this ecosystem.
- */
 typedef struct RuntimeEcosystem {
     char * name;
     RuntimeRegion * regions;
@@ -61,16 +45,22 @@ typedef struct RuntimeEcosystem {
     struct RuntimeEcosystem * next;
 } RuntimeEcosystem;
 
-/*
-  Global simulation state, Owns all runtime structures
-  programStatements is used to find
-  on encounter / on generation / every random blocks at runtime
- */
+typedef struct PopulationRecord {
+    int    generation;
+    char * ecosystemName;
+    char * regionName;
+    char * speciesName;
+    int    count;
+    struct PopulationRecord * next;
+} PopulationRecord;
+
+
 typedef struct {
     RuntimeEcosystem * ecosystems;
     int currentGeneration;
     unsigned int randomSeed;
     StatementList * programStatements;  // read-only, owned by the AST
+    PopulationRecord * history;         
 } SimulationState;
 
 #endif
