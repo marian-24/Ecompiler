@@ -202,9 +202,11 @@ static void _removeIndividual(RuntimeRegion * region, Individual * target) {
     while (cur) {
         if (cur == target) {
             if (prev) prev->next  = cur->next;
-            else       region->individuals = cur->next;
+            else region->individuals = cur->next;
+
             free(cur->speciesName);
             free(cur);
+
             return;
         }
         prev = cur;
@@ -242,7 +244,7 @@ static double _evalExpr(SimulationState * state, Expression * expr) {
         case EXPR_BOOLEAN:  return (double) expr->boolValue;
         case EXPR_STRING:   return 0.0; /* no numérico; sólo válido en log */
         case EXPR_IDENTIFIER:
-            logWarning(_logger, "Identificador '%s' sin contexto de variable local.", expr->identifier);
+            logWarning(_logger, "Identifier '%s' without local variable context.", expr->identifier);
             return 0.0;
 
         case EXPR_ATTRIBUTE_ACCESS: {
@@ -333,6 +335,29 @@ static void _execList(SimulationState * state, StatementList * list) {
     }
 }
 
+static int _countInEcosystem(RuntimeEcosystem * eco, const char * speciesName) {
+    int count = 0;
+
+    for (RuntimeRegion * region = eco->regions; region; region = region->next)
+        count += _countInRegion(region, speciesName);
+
+    return count;
+}
+
+static void _registerExtinction( SimulationState * state, RuntimeEcosystem * eco, RuntimeRegion * region, const char * species, ExtinctionCause cause) {
+    if (_countInEcosystem(eco, species) != 0) return;
+
+    ExtinctionRecord * rec = calloc(1, sizeof(ExtinctionRecord));
+
+    rec->generation    = state->currentGeneration;
+    rec->ecosystemName = strdup(eco->name);
+    rec->regionName    = strdup(region->name);
+    rec->speciesName   = strdup(species);
+    rec->cause         = cause;
+
+    _appendExtinctionRecord(state, rec);
+}
+
 static void _execStmt(SimulationState * state, Statement * stmt) {
     if (!stmt) return;
 
@@ -387,11 +412,13 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
             if (_ctxA.speciesName && strcmp(_ctxA.speciesName, rem->speciesName) == 0
                 && _ctxA.individual && !_ctxA.removed) {
                 _removeIndividual(_ctxA.region, _ctxA.individual);
+                _registerExtinction(state, _ctxA.ecosystem, _ctxA.region, rem->speciesName, EXTINCTION_CAUSE_REMOVED);
                 _ctxA.individual = NULL;
                 _ctxA.removed    = 1;
             } else if (_ctxB.speciesName && strcmp(_ctxB.speciesName, rem->speciesName) == 0
                        && _ctxB.individual && !_ctxB.removed) {
                 _removeIndividual(_ctxB.region, _ctxB.individual);
+                _registerExtinction(state, _ctxB.ecosystem, _ctxB.region, rem->speciesName, EXTINCTION_CAUSE_REMOVED);
                 _ctxB.individual = NULL;
                 _ctxB.removed    = 1;
             } else {
@@ -678,8 +705,7 @@ static void _applyEncounters(SimulationState * state, RuntimeEcosystem * eco, Ru
                     _ctxB = (ExecCtx){ b->speciesB, indB, 0, region, eco };
                     _execList(state, b->body);
 
-                    int    aRemoved     = _ctxA.removed;
-                    int    bRemoved     = _ctxB.removed;
+                    int aRemoved = _ctxA.removed, bRemoved = _ctxB.removed;
                     double energyAAfter = aRemoved ? -1.0
                                         : (_ctxA.individual ? _ctxA.individual->energy : energyABefore);
                     double energyBAfter = bRemoved ? -1.0
@@ -702,6 +728,8 @@ static void _applyEncounters(SimulationState * state, RuntimeEcosystem * eco, Ru
                     rec->speciesBRemoved = bRemoved;
                     _appendEncounterRecord(state, rec);
                 }
+                _registerExtinction(state, eco, region, b->speciesB, EXTINCTION_CAUSE_REMOVED);
+                _registerExtinction(state, eco, region, b->speciesA, EXTINCTION_CAUSE_REMOVED);
             }
             indA = nxt;
         }
@@ -756,13 +784,7 @@ static void _applyMortality(SimulationState * state, RuntimeEcosystem * eco, Run
             free(ind);
 
             if (_countInRegion(region, deadSpecies) == 0) {
-                ExtinctionRecord * rec = calloc(1, sizeof(ExtinctionRecord));
-                rec->generation    = state->currentGeneration;
-                rec->ecosystemName = strdup(eco->name);
-                rec->regionName    = strdup(region->name);
-                rec->speciesName   = strdup(deadSpecies);
-                rec->cause         = cause;
-                _appendExtinctionRecord(state, rec);
+                _registerExtinction(state, eco, region, deadSpecies, cause);
                 logDebugging(_logger, "extinción: %s desapareció de %s.%s", deadSpecies, eco->name, region->name);
             }
             free(deadSpecies);

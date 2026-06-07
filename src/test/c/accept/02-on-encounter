@@ -41,7 +41,7 @@ ecosystem Patagonia {
 }
 
 add 10 Puma to Patagonia.Bosque;
-add 50 Guanaco to Patagonia.Bosque;
+add 15 Guanaco to Patagonia.Bosque;
 
 on encounter Puma with Guanaco in Patagonia.Bosque {
     if (Puma.speed > Guanaco.speed) {
