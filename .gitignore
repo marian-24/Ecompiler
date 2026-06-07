@@ -17,6 +17,7 @@
 .env*
 *.csproj.user
 *~
+*.json
 
 # Application specific.
 /program

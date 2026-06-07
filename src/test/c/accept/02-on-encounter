@@ -56,3 +56,5 @@ on encounter Puma with Guanaco in Patagonia.Bosque {
         move Guanaco to Patagonia.Bosque;
     }
 }
+
+simulate Patagonia for 10 generations;

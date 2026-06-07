@@ -5,7 +5,9 @@
 #include "../../support/language/String.h"
 #include "../../support/logging/Logger.h"
 #include "../../support/type/CompilerState.h"
+#include "../../support/type/CompilationStatus.h"
 #include "../../support/type/ModuleDestructor.h"
+#include "./json/JsonWriter.h"
 #include <stdarg.h>
 #include <stdio.h>
 

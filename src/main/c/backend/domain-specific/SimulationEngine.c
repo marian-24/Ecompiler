@@ -59,6 +59,55 @@ static RuntimeSpecies * _buildSpecies(SpeciesDefinition *);
 static RuntimeRegion *  _buildRegion(RegionDefinition *);
 
 
+/*Helpers */
+static void _appendPopulationRecord(SimulationState * state, PopulationRecord * rec){
+    rec->next = NULL;
+
+    if (state->history == NULL) {
+        state->history = rec;
+        state->historyTail = rec;
+    } else {
+        state->historyTail->next = rec;
+        state->historyTail = rec;
+    }
+}
+
+static void _appendEnvironmentRecord(SimulationState * state,EnvironmentRecord * rec){
+    rec->next = NULL;
+
+    if (state->environmentHistory == NULL) {
+        state->environmentHistory = rec;
+        state->environmentHistoryTail = rec;
+    } else {
+        state->environmentHistoryTail->next = rec;
+        state->environmentHistoryTail = rec;
+    }
+}
+
+static void _appendEncounterRecord(SimulationState * state,EncounterRecord * rec){
+    rec->next = NULL;
+
+    if (state->encounterHistory == NULL) {
+        state->encounterHistory = rec;
+        state->encounterHistoryTail = rec;
+    } else {
+        state->encounterHistoryTail->next = rec;
+        state->encounterHistoryTail = rec;
+    }
+}
+
+static void _appendExtinctionRecord(SimulationState * state,ExtinctionRecord * rec){
+    rec->next = NULL;
+
+    if (state->extinctionHistory == NULL) {
+        state->extinctionHistory = rec;
+        state->extinctionHistoryTail = rec;
+    } else {
+        state->extinctionHistoryTail->next = rec;
+        state->extinctionHistoryTail = rec;
+    }
+}
+
 static void _shutdownSimulationEngineModule(void) {
     if (_logger != NULL) {
         logDebugging(_logger, "Destroying module: SimulationEngine...");
@@ -131,12 +180,11 @@ static Individual * _pickRandom(RuntimeRegion * region, const char * speciesName
             i++;
         }
     }
-    return NULL; /* inalcanzable */
+    return NULL;
 }
 
 
-static void _addToRegion(RuntimeRegion * region, const char * speciesName,
-                          int count, double initialEnergy) {
+static void _addToRegion(RuntimeRegion * region, const char * speciesName, int count, double initialEnergy) {
     for (int i = 0; i < count; i++) {
         Individual * ind   = calloc(1, sizeof(Individual));
         ind->speciesName   = strdup(speciesName);
@@ -606,16 +654,17 @@ static void _applyEveryRandom(SimulationState * state,
 }
 
 
-static void _applyEncounters(SimulationState * state,
-                              RuntimeEcosystem * eco, RuntimeRegion * region) {
+static void _applyEncounters(SimulationState * state, RuntimeEcosystem * eco, RuntimeRegion * region) {
     for (StatementList * sl = state->programStatements; sl; sl = sl->next) {
         Statement * s = sl->statement;
         if (s->type != STATEMENT_ON_ENCOUNTER) continue;
+        
         OnEncounterBlock * b = s->onEncounterBlock;
         if (strcmp(b->ecosystemName, eco->name)    != 0) continue;
         if (strcmp(b->regionName,    region->name) != 0) continue;
 
         Individual * indA = region->individuals;
+
         while (indA) {
             Individual * nxt = indA->next; /* guardado antes del posible remove */
             if (strcmp(indA->speciesName, b->speciesA) == 0) {
@@ -651,8 +700,7 @@ static void _applyEncounters(SimulationState * state,
                     rec->energyBBefore   = energyBBefore;
                     rec->energyBAfter    = energyBAfter;
                     rec->speciesBRemoved = bRemoved;
-                    rec->next            = state->encounterHistory;
-                    state->encounterHistory = rec;
+                    _appendEncounterRecord(state, rec);
                 }
             }
             indA = nxt;
@@ -660,8 +708,7 @@ static void _applyEncounters(SimulationState * state,
     }
 }
 
-static void _applyReproduction(SimulationState * state,
-                                RuntimeEcosystem * eco, RuntimeRegion * region) {
+static void _applyReproduction(SimulationState * state, RuntimeEcosystem * eco, RuntimeRegion * region) {
     for (RuntimeSpecies * sp = eco->species; sp; sp = sp->next) {
         int count = _countInRegion(region, sp->name);
         int total = _totalInRegion(region);
@@ -672,21 +719,19 @@ static void _applyReproduction(SimulationState * state,
             double r = (double) rand() / ((double) RAND_MAX + 1.0);
             if (r < sp->reproductionRate) {
                 _addToRegion(region, sp->name, 1, sp->initialEnergy);
-                logDebugging(_logger, "reproducción: nuevo %s nacido en %s.%s",
-                             sp->name, eco->name, region->name);
+                logDebugging(_logger, "reproduction: %s born in %s.%s",sp->name, eco->name, region->name);
             }
         }
     }
 }
 
-static void _applyMortality(SimulationState * state,
-                             RuntimeEcosystem * eco, RuntimeRegion * region) {
+static void _applyMortality(SimulationState * state, RuntimeEcosystem * eco, RuntimeRegion * region) {
     Individual * ind  = region->individuals;
     Individual * prev = NULL;
 
     while (ind) {
         Individual * nxt  = ind->next;
-        int          dead = 0;
+        int dead = 0;
         ExtinctionCause cause = EXTINCTION_CAUSE_AGE; /* default; sobreescrito abajo */
 
         ind->age++;
@@ -695,18 +740,18 @@ static void _applyMortality(SimulationState * state,
         if (sp) {
             if (ind->age    >= sp->lifespan) { dead = 1; cause = EXTINCTION_CAUSE_AGE;     }
             if (ind->energy <= 0.0)          { dead = 1; cause = EXTINCTION_CAUSE_ENERGY;  }
-            if (!dead && !_habitatCompatible(sp->habitat, region->habitat)
-                      && (rand() % 2) == 0)  { dead = 1; cause = EXTINCTION_CAUSE_HABITAT; }
+            if (!dead && !_habitatCompatible(sp->habitat, region->habitat) 
+                && (rand() % 2) == 0)  { dead = 1; cause = EXTINCTION_CAUSE_HABITAT; }
         }
 
         if (dead) {
             char * deadSpecies = strdup(ind->speciesName);
 
-            logDebugging(_logger, "mortalidad: %s murió en %s.%s (age=%d, energy=%.1f)",
-                         ind->speciesName, eco->name, region->name, ind->age, ind->energy);
+            logDebugging(_logger, "mortality: %s died in %s.%s (age=%d, energy=%.1f)", ind->speciesName, eco->name, region->name, ind->age, ind->energy);
 
-            if (prev) prev->next           = nxt;
-            else       region->individuals  = nxt;
+            if (prev) prev->next = nxt;
+            else region->individuals = nxt;
+
             free(ind->speciesName);
             free(ind);
 
@@ -717,15 +762,11 @@ static void _applyMortality(SimulationState * state,
                 rec->regionName    = strdup(region->name);
                 rec->speciesName   = strdup(deadSpecies);
                 rec->cause         = cause;
-                rec->next          = state->extinctionHistory;
-                state->extinctionHistory = rec;
-                logDebugging(_logger, "extinción: %s desapareció de %s.%s",
-                             deadSpecies, eco->name, region->name);
+                _appendExtinctionRecord(state, rec);
+                logDebugging(_logger, "extinción: %s desapareció de %s.%s", deadSpecies, eco->name, region->name);
             }
             free(deadSpecies);
-        } else {
-            prev = ind;
-        }
+        } else prev = ind;
         ind = nxt;
     }
 }
@@ -746,14 +787,14 @@ static RuntimeSpecies * _buildSpecies(SpeciesDefinition * def) {
     for (SpeciesAttributeList * al = def->attributes; al; al = al->next) {
         SpeciesAttribute * a = al->attribute;
         switch (a->type) {
-            case ATTR_LIFESPAN:              rs->lifespan             = a->lifespanValue;          break;
-            case ATTR_REPRODUCTION_RATE:     rs->reproductionRate     = a->reproductionRateValue;  break;
-            case ATTR_SPEED:                 rs->speed                = a->speedValue;              break;
-            case ATTR_ENERGY:               rs->initialEnergy         = a->energyValue;            break;
-            case ATTR_REPRODUCTIVE_STRATEGY: rs->reproductiveStrategy = a->reproductiveStrategy;   break;
-            case ATTR_DIET:                  rs->diet                 = a->dietValue;               break;
-            case ATTR_HABITAT:               rs->habitat              = a->habitatValue;            break;
-            case ATTR_ENVIRONMENTAL_TOLERANCE: rs->envTolerance       = a->envTolerance;            break;
+            case ATTR_LIFESPAN: rs->lifespan = a->lifespanValue; break;
+            case ATTR_REPRODUCTION_RATE: rs->reproductionRate = a->reproductionRateValue; break;
+            case ATTR_SPEED: rs->speed = a->speedValue; break;
+            case ATTR_ENERGY: rs->initialEnergy = a->energyValue; break;
+            case ATTR_REPRODUCTIVE_STRATEGY: rs->reproductiveStrategy = a->reproductiveStrategy; break;
+            case ATTR_DIET: rs->diet = a->dietValue; break;
+            case ATTR_HABITAT: rs->habitat = a->habitatValue; break;
+            case ATTR_ENVIRONMENTAL_TOLERANCE: rs->envTolerance = a->envTolerance; break;
         }
     }
     return rs;
@@ -774,7 +815,7 @@ static RuntimeRegion * _buildRegion(RegionDefinition * def) {
 SimulationState * initSimulation(Program * ast) {
     SimulationState * state = calloc(1, sizeof(SimulationState));
     state->currentGeneration = 0;
-    state->randomSeed        = (unsigned int) time(NULL);
+    state->randomSeed = (unsigned int) time(NULL);
     state->programStatements = ast->statements; /* referencia de solo-lectura */
 
     for (StatementList * sl = ast->statements; sl; sl = sl->next) {
@@ -814,23 +855,37 @@ SimulationState * initSimulation(Program * ast) {
         state->ecosystems = eco;
     }
 
-    logDebugging(_logger, "SimulationState inicializado.");
+    logDebugging(_logger, "Initialized SimulationState.");
     return state;
 }
 
 
+static void _executePreSimulationStatements(SimulationState * state,const char * ecosystemName) {
+    for (StatementList * sl = state->programStatements; sl; sl = sl->next)
+    {
+        Statement * stmt = sl->statement;
+        switch (stmt->type) {
+            case STATEMENT_ADD:
+            case STATEMENT_MOVE:
+            case STATEMENT_REMOVE: _execStmt(state, stmt); break;
+            default: break;
+        }
+    }
+}
+
 void runSimulation(SimulationState * state, SimulateStatement * cmd) {
+    _executePreSimulationStatements(state,cmd->ecosystemName);
+
     if (cmd->hasSeed) srand((unsigned int) cmd->seedValue);
-    else              srand(state->randomSeed);
+    else srand(state->randomSeed);
 
     RuntimeEcosystem * eco = _findEcosystem(state, cmd->ecosystemName);
     if (!eco) {
-        logError(_logger, "simulate: ecosistema '%s' no encontrado.", cmd->ecosystemName);
+        logError(_logger, "simulate: ecosystem '%s' not found.", cmd->ecosystemName);
         return;
     }
 
-    logDebugging(_logger, "simulate: iniciando %d generaciones para '%s'",
-                 cmd->generations, cmd->ecosystemName);
+    logDebugging(_logger, "simulate: starting %d generations for '%s'", cmd->generations, cmd->ecosystemName);
 
     for (int g = 0; g < cmd->generations; g++) {
         state->currentGeneration++;
@@ -851,8 +906,7 @@ void runSimulation(SimulationState * state, SimulateStatement * cmd) {
                 rec->regionName    = strdup(region->name);
                 rec->speciesName   = strdup(sp->name);
                 rec->count         = _countInRegion(region, sp->name);
-                rec->next          = state->history;
-                state->history     = rec;
+                _appendPopulationRecord(state, rec);
             }
             EnvironmentRecord * env = calloc(1, sizeof(EnvironmentRecord));
             env->generation    = state->currentGeneration;
@@ -861,12 +915,11 @@ void runSimulation(SimulationState * state, SimulateStatement * cmd) {
             env->temperature   = region->temperature;
             env->humidity      = region->humidity;
             env->altitude      = region->altitude;
-            env->next          = state->environmentHistory;
-            state->environmentHistory = env;
+            _appendEnvironmentRecord(state, env);
         }
     }
 
-    logDebugging(_logger, "simulate: finalizado (generación = %d).", state->currentGeneration);
+    logDebugging(_logger, "simulate: done (generation = %d).", state->currentGeneration);
 }
 
 int getPopulation(SimulationState * state, const char * ecosystemName,
@@ -934,7 +987,6 @@ void destroySimulationState(SimulationState * state) {
         ext = nextExt;
     }
 
-
     EncounterRecord * enc = state->encounterHistory;
     while (enc) {
         EncounterRecord * nextEnc = enc->next;
@@ -945,7 +997,6 @@ void destroySimulationState(SimulationState * state) {
         free(enc);
         enc = nextEnc;
     }
-
  
     EnvironmentRecord * env = state->environmentHistory;
     while (env) {

@@ -90,7 +90,6 @@ typedef struct EncounterRecord {
     struct EncounterRecord * next;
 } EncounterRecord;
 
-
 typedef struct EnvironmentRecord {
     int    generation;
     char * ecosystemName;
@@ -106,10 +105,19 @@ typedef struct {
     int                 currentGeneration;
     unsigned int        randomSeed;
     StatementList     * programStatements;   
+
     PopulationRecord  * history;             
+    PopulationRecord  * historyTail;             
+
     ExtinctionRecord  * extinctionHistory;   
+    ExtinctionRecord  * extinctionHistoryTail;   
+
     EncounterRecord   * encounterHistory;    
+    EncounterRecord   * encounterHistoryTail;    
+
     EnvironmentRecord * environmentHistory; 
+    EnvironmentRecord * environmentHistoryTail; 
+
 } SimulationState;
 
 #endif

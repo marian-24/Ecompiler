@@ -297,6 +297,7 @@ CompilationStatus executeSemanticAnalysis(struct CompilerState * state) {
 	}
 
 	logDebugging(_logger, "Semantic analysis completed successfully");
+	state->succeeded = SUCCEEDED;
 	return SUCCEEDED;
 }
 

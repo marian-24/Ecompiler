@@ -1,6 +1,5 @@
-#include "backend/code-generation/Generator.h"
+//#include "backend/code-generation/Generator.h"
 #include "backend/semantic-analysis/SemanticAnalyzer.h"
-//#include "backend/domain-specific/Calculator.h"
 #include "frontend/Frontend.h"
 #include "frontend/lexical-analysis/FlexActions.h"
 #include "frontend/syntactic-analysis/BisonActions.h"
@@ -8,6 +7,9 @@
 #include "support/type/CompilationStatus.h"
 #include "support/type/CompilerState.h"
 #include "support/type/ModuleDestructor.h"
+#include "backend/code-generation/EngineExecutor.h"
+#include "backend/code-generation/Generator.h"
+#include "backend/domain-specific/SimulationEngine.h"
 
 /**
  * The main entry-point of the entire application. If you use "strtok" to
@@ -30,7 +32,7 @@ const int main(const int length, const char ** arguments) {
 		initializeBisonActionsModule(&compilerState),
 		initializeFrontendModule(lexicalAnalyzer),
 		initializeSemanticAnalyzerModule(&compilerState),
-		/*initializeCalculatorModule(),*/
+		initializeSimulationEngineModule(),
 		initializeGeneratorModule()
 	};
 	CompilationStatus compilationStatus = executeSyntacticAnalysis();
@@ -40,9 +42,14 @@ const int main(const int length, const char ** arguments) {
 		logDebugging(logger, "Starting semantic analysis phase...");
 		CompilationStatus semanticStatus = executeSemanticAnalysis(&compilerState);
 		logDebugging(logger, "Semantic analysis returned status: %d (SUCCEEDED=%d)", semanticStatus, SUCCEEDED);
+
 		if (semanticStatus == SUCCEEDED) {
 			logDebugging(logger, "Semantic analysis passed. Moving to code generation...");
-			// executeGenerator(&compilerState);  // Uncomment when Generator is ready
+			logDebugging(logger, "Starting simulation engine...");
+			compilerState.simulationState = executeEngine(&compilerState);	// inicializa y ejecuta simulación
+		    logDebugging(logger, "Generating outputs...");
+			executeGenerator(&compilerState);  // Uncomment when Generator is ready
+
 		} else {
 			logError(logger, "The semantic analysis phase rejects the input program.");
 			compilationStatus = FAILED;
@@ -52,12 +59,15 @@ const int main(const int length, const char ** arguments) {
 		logError(logger, "The syntactic-analysis phase rejects the input program.");
 		compilationStatus = FAILED;
 	}
+
+	logDebugging(logger, "Releasing simulation resources...");
+	if(compilerState.simulationState) destroySimulationState(compilerState.simulationState);
+	
 	logDebugging(logger, "Releasing AST resources...");
 	destroySemanticAnalyzerState(&compilerState);
 	destroyProgram(program);
-	for (int k = (sizeof(moduleDestructors)/sizeof(ModuleDestructor)) - 1; 0 <= k; --k) {
-		moduleDestructors[k]();
-	}
+	for (int k = (sizeof(moduleDestructors)/sizeof(ModuleDestructor)) - 1; 0 <= k; --k) moduleDestructors[k]();
+
 	logDebugging(logger, "Compilation is done.");
 	destroyLogger(logger);
 	destroyLexicalAnalyzer(lexicalAnalyzer);
