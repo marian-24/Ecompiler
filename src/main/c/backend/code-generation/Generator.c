@@ -14,6 +14,25 @@ void executeGenerator(CompilerState * compilerState) {
 	_generateProgram(compilerState->abstractSyntaxtTree);
 	_generateEpilogue(compilerState->value);
 	logDebugging(_logger, "Generation is done.");*/
+
+	if(!ccompilerState->succeeded){
+		logError(_logger, "Semantic analysis failed. No output will be generated.");
+		return;
+	}
+
+	Program * program = compilerState->abstractSyntaxtTree;
+	if(program == NULL){
+		logError(_logger, "AST is empty. No output will be generated.");
+		return;
+	}
+	
+	logDebugging(_logger, "Generating JSON output...");
+	writeJSON(stdout, program);
+
+	logDebugging(_logger, "Generating HTML output...");
+	writeHTML(stdout, program);
+
+	logDebugging(_logger, "Generation is done.");
 }
 
 
