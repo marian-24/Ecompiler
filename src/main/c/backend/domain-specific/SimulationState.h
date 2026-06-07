@@ -54,13 +54,49 @@ typedef struct PopulationRecord {
     struct PopulationRecord * next;
 } PopulationRecord;
 
+typedef struct ExtinctionRecord {
+    int generation;
+    char * ecosystemName;
+    char * regionName;
+    char * speciesName;
+    struct ExtinctionRecord * next;
+} ExtinctionRecord;
+
+typedef struct EncounterRecord {
+    int generation;
+    char * ecosystemName;
+    char * regionName;
+    char * speciesA;
+    char * speciesB;
+    struct EncounterRecord * next;
+} EncounterRecord;
+
+typedef struct EnvironmentalChangeRecord {
+    int generation;
+    char * ecosystemName;
+    char * regionName;
+    char * attribute;
+    double oldValue;
+    double newValue;
+    struct EnvironmentalChangeRecord * next;
+} EnvironmentalChangeRecord;
 
 typedef struct {
     RuntimeEcosystem * ecosystems;
     int currentGeneration;
     unsigned int randomSeed;
     StatementList * programStatements;  // read-only, owned by the AST
-    PopulationRecord * history;         
+    PopulationRecord * history;       
+    PopulationRecord * historyTail;   // para evitar recorrer toda la lista  
+
+    ExtinctionRecord * extinctions;
+    ExtinctionRecord * extinctionsTail;
+
+    EncounterRecord * encounters;
+    EncounterRecord * encountersTail;
+
+    EnvironmentalChangeRecord * envChanges;
+    EnvironmentalChangeRecord * envChangesTail;
 } SimulationState;
 
 #endif

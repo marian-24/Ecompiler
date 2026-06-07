@@ -9,13 +9,7 @@ static Logger * _logger = NULL;
 /** PUBLIC FUNCTIONS */
 
 void executeGenerator(CompilerState * compilerState) {
-	/*logDebugging(_logger, "Generating final output...");
-	_generatePrologue();
-	_generateProgram(compilerState->abstractSyntaxtTree);
-	_generateEpilogue(compilerState->value);
-	logDebugging(_logger, "Generation is done.");*/
-
-	if(!ccompilerState->succeeded){
+	if(!compilerState->succeeded){
 		logError(_logger, "Semantic analysis failed. No output will be generated.");
 		return;
 	}
@@ -25,12 +19,12 @@ void executeGenerator(CompilerState * compilerState) {
 		logError(_logger, "AST is empty. No output will be generated.");
 		return;
 	}
-	
+
 	logDebugging(_logger, "Generating JSON output...");
-	writeJSON(stdout, program);
+	writeJSON(stdout, compilerState->simulationState);
 
 	logDebugging(_logger, "Generating HTML output...");
-	writeHTML(stdout, program);
+	writeHTML(stdout, compilerState->simulationState);
 
 	logDebugging(_logger, "Generation is done.");
 }

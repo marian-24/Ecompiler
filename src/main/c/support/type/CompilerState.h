@@ -2,7 +2,7 @@
 #define COMPILER_STATE_HEADER
 
 #include "../../frontend/syntactic-analysis/AbstractSyntaxTree.h"
-
+#include "../../backend/domain-specific/SimulationState.h"
 struct SymbolTable;
 
 /**
@@ -28,7 +28,7 @@ typedef struct CompilerState {
 	 * Contains all species, regions, and ecosystems definitions.
 	 */
 	struct SymbolTable * symbolTable;
-
+	SimulationState * simulationState;
 	// TODO: Add an stack to handle nested scopes.
 	// TODO: Add more configuration.
 	// TODO: Add whatever you need.

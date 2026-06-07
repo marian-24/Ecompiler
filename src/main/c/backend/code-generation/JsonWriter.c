@@ -173,61 +173,53 @@ static void printStatementsAndCount(StatementList * list, int * countSpecies, in
         else if (list->statement->type == STATEMENT_REGION) (*countRegions)++;
 
         else if (list->statement->type == STATEMENT_SIMULATE) {
-            ecosystemName = list->statement->simulateStatement->ecosystemName;
-            generations   = list->statement->simulateStatement->generations;
-            hasSeed       = list->statement->simulateStatement->hasSeed;
-            seed          = list->statement->simulateStatement->seedValue;
+            *ecosystemName = list->statement->simulateStatement->ecosystemName;
+            *generations   = list->statement->simulateStatement->generations;
+            *hasSeed       = list->statement->simulateStatement->hasSeed;
+            *seed          = list->statement->simulateStatement->seedValue;
         }
         list = list->next;
     }
 
 }
+static void _writePopulationHistory(FILE * out, PopulationRecord * history) {
+    while(history != NULL) {
 
+        fprintf(out,
+            "    {\n"
+            "      \"generation\": %d,\n"
+            "      \"ecosystem\": \"%s\",\n"
+            "      \"region\": \"%s\",\n"
+            "      \"species\": \"%s\",\n"
+            "      \"count\": %d\n"
+            "    }%s\n",
+
+            history->generation,
+            history->ecosystemName,
+            history->regionName,
+            history->speciesName,
+            history->count,
+
+            history->next == NULL ? "" : ","
+        );
+        history = history->next;
+    }
+}
 /* PUBLIC */
-void writeJson(FILE * out, Program * program) {
-    /* buscamos el simulate para obtener ecosistema y generaciones */
-    char * ecosystemName = "unknown";
-    int generations = 0, hasSeed = 0, seed = 0;
+void writeJSON(FILE * out, SimulationState * state) {
 
-    StatementList * aux = program->statements;
-    int countSpecies = 0, countRegions = 0;
+    fprintf(out, "{\n");
+    fprintf(out,
+        "  \"generationCount\": %d,\n",
+        state->currentGeneration
+    );
 
-    printStatementsAndCount(aux, &countSpecies, &countRegions, &ecosystemName, &generations, &hasSeed, &seed);
-    fprintf(out, "{\n  \"simulation\": {\n");
-    fprintf(out, "    \"ecosystem\": \"%s\",\n", ecosystemName);
-    fprintf(out, "    \"generations\": %d,\n", generations);
-    if (hasSeed) fprintf(out, "    \"seed\": %d,\n", seed);
+    fprintf(out, "  \"populationHistory\": [\n");
+    _writePopulationHistory(
+        out,
+        state->history
+    );
 
-    /* species */
-    fprintf(out, "    \"species\": [\n");
-    StatementList * list = program->statements;
-    int si = 0;
-    while (list != NULL) {
-        if (list->statement->type == STATEMENT_SPECIES) {
-            _writeSpecies(out, list->statement->speciesDefinition, si == countSpecies - 1);
-            si++;
-        }
-        list = list->next;
-    }
-    fprintf(out, "    ],\n");
-
-    /* regions */
-    fprintf(out, "    \"regions\": [\n");
-    int ri = 0;
-    list = program->statements;
-    while (list != NULL) {
-        if (list->statement->type == STATEMENT_REGION) {
-            _writeRegion(out, list->statement->regionDefinition, ri == countRegions - 1);
-            ri++;
-        }
-        list = list->next;
-    }
-    fprintf(out, "    ],\n");
-
-    /* events */
-    fprintf(out, "    \"events\": [\n");
-    _writeEvents(out, program->statements);
-    fprintf(out, "    ]\n");
-
-    fprintf(out, "  }\n}\n");
+    fprintf(out, "  ]\n");
+    fprintf(out, "}\n");
 }

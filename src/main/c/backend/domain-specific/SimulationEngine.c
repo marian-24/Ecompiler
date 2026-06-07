@@ -816,7 +816,7 @@ void runSimulation(SimulationState * state, SimulateStatement * cmd) {
 
     for (int g = 0; g < cmd->generations; g++) {
         state->currentGeneration++;
-
+        
         for (RuntimeRegion * region = eco->regions; region; region = region->next) {
             _applyOnGeneration(state, eco, region);
             _applyEveryRandom(state,  eco, region);
@@ -824,7 +824,7 @@ void runSimulation(SimulationState * state, SimulateStatement * cmd) {
             _applyReproduction(state, eco, region);
             _applyMortality(state,    eco, region);
         }
-
+        /*Registrar poblaciones */
         for (RuntimeRegion * region = eco->regions; region; region = region->next) {
             for (RuntimeSpecies * sp = eco->species; sp; sp = sp->next) {
                 PopulationRecord * rec = calloc(1, sizeof(PopulationRecord));
@@ -833,8 +833,15 @@ void runSimulation(SimulationState * state, SimulateStatement * cmd) {
                 rec->regionName    = strdup(region->name);
                 rec->speciesName   = strdup(sp->name);
                 rec->count         = _countInRegion(region, sp->name);
-                rec->next          = state->history;
-                state->history     = rec;
+                rec->next          = NULL;
+
+                if (state->history == NULL) {
+                    state->history = rec;
+                    state->historyTail = rec;
+                } else {
+                    state->historyTail->next = rec;
+                    state->historyTail = rec;
+                }
             }
         }
     }
