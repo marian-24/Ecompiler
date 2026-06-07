@@ -6,12 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 typedef struct Individual {
     char * speciesName;
     double energy;
     int age;
     struct Individual * next;
 } Individual;
+
 
 typedef struct RuntimeSpecies {
     char * name;
@@ -26,7 +28,6 @@ typedef struct RuntimeSpecies {
     struct RuntimeSpecies * next;
 } RuntimeSpecies;
 
-
 typedef struct RuntimeRegion {
     char * name;
     int temperature;
@@ -38,12 +39,14 @@ typedef struct RuntimeRegion {
     struct RuntimeRegion * next;
 } RuntimeRegion;
 
+
 typedef struct RuntimeEcosystem {
     char * name;
     RuntimeRegion * regions;
     RuntimeSpecies * species;
     struct RuntimeEcosystem * next;
 } RuntimeEcosystem;
+
 
 typedef struct PopulationRecord {
     int    generation;
@@ -54,49 +57,59 @@ typedef struct PopulationRecord {
     struct PopulationRecord * next;
 } PopulationRecord;
 
+
+typedef enum {
+    EXTINCTION_CAUSE_AGE,       
+    EXTINCTION_CAUSE_ENERGY,   
+    EXTINCTION_CAUSE_HABITAT,   
+    EXTINCTION_CAUSE_REMOVED    
+} ExtinctionCause;
+
+
 typedef struct ExtinctionRecord {
-    int generation;
-    char * ecosystemName;
-    char * regionName;
-    char * speciesName;
+    int             generation;
+    char *          ecosystemName;
+    char *          regionName;
+    char *          speciesName;
+    ExtinctionCause cause;
     struct ExtinctionRecord * next;
 } ExtinctionRecord;
 
 typedef struct EncounterRecord {
-    int generation;
+    int    generation;
     char * ecosystemName;
     char * regionName;
     char * speciesA;
+    double energyABefore;
+    double energyAAfter;    
+    int    speciesARemoved;
     char * speciesB;
+    double energyBBefore;
+    double energyBAfter;     
+    int    speciesBRemoved;
     struct EncounterRecord * next;
 } EncounterRecord;
 
-typedef struct EnvironmentalChangeRecord {
-    int generation;
+
+typedef struct EnvironmentRecord {
+    int    generation;
     char * ecosystemName;
     char * regionName;
-    char * attribute;
-    double oldValue;
-    double newValue;
-    struct EnvironmentalChangeRecord * next;
-} EnvironmentalChangeRecord;
+    int    temperature;
+    int    humidity;
+    int    altitude;
+    struct EnvironmentRecord * next;
+} EnvironmentRecord;
 
 typedef struct {
-    RuntimeEcosystem * ecosystems;
-    int currentGeneration;
-    unsigned int randomSeed;
-    StatementList * programStatements;  // read-only, owned by the AST
-    PopulationRecord * history;       
-    PopulationRecord * historyTail;   // para evitar recorrer toda la lista  
-
-    ExtinctionRecord * extinctions;
-    ExtinctionRecord * extinctionsTail;
-
-    EncounterRecord * encounters;
-    EncounterRecord * encountersTail;
-
-    EnvironmentalChangeRecord * envChanges;
-    EnvironmentalChangeRecord * envChangesTail;
+    RuntimeEcosystem  * ecosystems;
+    int                 currentGeneration;
+    unsigned int        randomSeed;
+    StatementList     * programStatements;   
+    PopulationRecord  * history;             
+    ExtinctionRecord  * extinctionHistory;   
+    EncounterRecord   * encounterHistory;    
+    EnvironmentRecord * environmentHistory; 
 } SimulationState;
 
 #endif

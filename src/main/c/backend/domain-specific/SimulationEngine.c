@@ -1,3 +1,4 @@
+
 #include "SimulationEngine.h"
 #include "../../frontend/syntactic-analysis/BisonParser.h"
 #include <stdlib.h>
@@ -10,16 +11,15 @@ static Logger * _logger = NULL;
 
 
 typedef struct {
-    const char *     speciesName; /* especie a la que pertenece el individuo  */
-    Individual *     individual;  /* puntero al individuo en proceso           */
-    int              removed;     /* 1 si el individuo fue removido/liberado   */
-    RuntimeRegion *  region;      /* región en la que vive el individuo        */
-    RuntimeEcosystem * ecosystem; /* ecosistema contenedor                     */
+    const char *     speciesName; 
+    Individual *     individual;  
+    int              removed;    
+    RuntimeRegion *  region;      
+        RuntimeEcosystem * ecosystem; 
 } ExecCtx;
 
 static ExecCtx _ctxA = { NULL, NULL, 0, NULL, NULL };
 static ExecCtx _ctxB = { NULL, NULL, 0, NULL, NULL };
-
 
 /* lookup */
 static RuntimeEcosystem * _findEcosystem(SimulationState *, const char *);
@@ -171,7 +171,6 @@ static int _habitatCompatible(TokenLabel speciesHabitat, TokenLabel regionHabita
     return speciesHabitat == regionHabitat;
 }
 
-
 static void _applyOp(double * target, AssignmentOperatorType op, double value) {
     switch (op) {
         case ASSIGN_SIMPLE: *target  = value; break;
@@ -195,7 +194,6 @@ static double _evalExpr(SimulationState * state, Expression * expr) {
         case EXPR_BOOLEAN:  return (double) expr->boolValue;
         case EXPR_STRING:   return 0.0; /* no numérico; sólo válido en log */
         case EXPR_IDENTIFIER:
-            /* variables locales no implementadas en esta versión */
             logWarning(_logger, "Identificador '%s' sin contexto de variable local.", expr->identifier);
             return 0.0;
 
@@ -203,7 +201,6 @@ static double _evalExpr(SimulationState * state, Expression * expr) {
             const char * obj  = expr->attributeAccess.objectName;
             const char * attr = expr->attributeAccess.attributeName;
 
-            /* energy es por-individuo: buscar en contexto activo */
             if (strcmp(attr, "energy") == 0) {
                 if (_ctxA.speciesName && strcmp(_ctxA.speciesName, obj) == 0 && _ctxA.individual && !_ctxA.removed)
                     return _ctxA.individual->energy;
@@ -213,7 +210,6 @@ static double _evalExpr(SimulationState * state, Expression * expr) {
                 return 0.0;
             }
 
-            /* atributos de especie */
             RuntimeSpecies * sp = _findSpecies(state, obj);
             if (!sp) {
                 logWarning(_logger, "Acceso a atributo de objeto desconocido '%s'.", obj);
@@ -228,7 +224,6 @@ static double _evalExpr(SimulationState * state, Expression * expr) {
         }
 
         case EXPR_ECOSYSTEM_ACCESS:
-            /* acceso a región como valor no numérico (e.g. Patagonia.Bosque) */
             return 0.0;
 
         case EXPR_POPULATION_OF: {
@@ -323,7 +318,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
                 logError(_logger, "add: región '%s' no encontrada en '%s'.", add->regionName, add->ecosystemName);
                 break;
             }
-            /* Respetar carryingCapacity */
             int spare = region->carryingCapacity - _totalInRegion(region);
             int toAdd = (add->amount < spare) ? add->amount : spare;
             if (toAdd <= 0) {
@@ -341,7 +335,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
         }
 
         case STATEMENT_REMOVE: {
-            
             RemoveStatement * rem = stmt->removeStatement;
             if (_ctxA.speciesName && strcmp(_ctxA.speciesName, rem->speciesName) == 0
                 && _ctxA.individual && !_ctxA.removed) {
@@ -360,7 +353,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
         }
 
         case STATEMENT_MOVE: {
-          
             MoveStatement * mv = stmt->moveStatement;
             RuntimeEcosystem * dstEco = _findEcosystem(state, mv->ecosystemName);
             if (!dstEco) {
@@ -419,7 +411,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
             const char * obj  = aa->objectName;
             const char * attr = aa->attributeName;
 
-            
             if (strlen(obj) == 0) {
                 RuntimeRegion * region = _ctxA.region
                                        ? _ctxA.region
@@ -438,9 +429,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
                 break;
             }
 
-            /*
-             * energy → por-individuo: modificar el individuo en contexto.
-             */
             if (strcmp(attr, "energy") == 0) {
                 if (_ctxA.speciesName && strcmp(_ctxA.speciesName, obj) == 0 && _ctxA.individual && !_ctxA.removed) {
                     _applyOp(&_ctxA.individual->energy, aa->op, val);
@@ -452,7 +440,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
                 break;
             }
 
-           
             RuntimeSpecies * sp = _findSpecies(state, obj);
             if (sp) {
                 if (strcmp(attr, "lifespan") == 0) {
@@ -491,7 +478,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
         }
 
         case STATEMENT_FOR_EACH: {
-            
             ForEachStatement * fe = stmt->forEachStatement;
             RuntimeEcosystem * eco = _findEcosystem(state, fe->ecosystemName);
             if (!eco) {
@@ -503,7 +489,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
                 logError(_logger, "for each: región '%s' no encontrada.", fe->regionName);
                 break;
             }
-
             /* Apilar contexto actual y configurar el nuevo */
             ExecCtx savedA = _ctxA;
             ExecCtx savedB = _ctxB;
@@ -519,7 +504,6 @@ static void _execStmt(SimulationState * state, Statement * stmt) {
                 ind = nxt;
             }
 
-            /* Restaurar contexto previo */
             _ctxA = savedA;
             _ctxB = savedB;
             break;
@@ -600,7 +584,6 @@ static void _applyOnGeneration(SimulationState * state,
     }
 }
 
-
 static void _applyEveryRandom(SimulationState * state,
                                RuntimeEcosystem * eco, RuntimeRegion * region) {
     for (StatementList * sl = state->programStatements; sl; sl = sl->next) {
@@ -632,27 +615,50 @@ static void _applyEncounters(SimulationState * state,
         if (strcmp(b->ecosystemName, eco->name)    != 0) continue;
         if (strcmp(b->regionName,    region->name) != 0) continue;
 
-        /* Iterar sobre cada individuo de speciesA */
         Individual * indA = region->individuals;
         while (indA) {
             Individual * nxt = indA->next; /* guardado antes del posible remove */
             if (strcmp(indA->speciesName, b->speciesA) == 0) {
                 Individual * indB = _pickRandom(region, b->speciesB);
                 if (indB) {
+                    double energyABefore = indA->energy;
+                    double energyBBefore = indB->energy;
+
                     ExecCtx savedA = _ctxA, savedB = _ctxB;
                     _ctxA = (ExecCtx){ b->speciesA, indA, 0, region, eco };
                     _ctxB = (ExecCtx){ b->speciesB, indB, 0, region, eco };
                     _execList(state, b->body);
-                    /* Restaurar; indA/indB pueden haber sido eliminados */
+
+                    int    aRemoved     = _ctxA.removed;
+                    int    bRemoved     = _ctxB.removed;
+                    double energyAAfter = aRemoved ? -1.0
+                                        : (_ctxA.individual ? _ctxA.individual->energy : energyABefore);
+                    double energyBAfter = bRemoved ? -1.0
+                                        : (_ctxB.individual ? _ctxB.individual->energy : energyBBefore);
+
                     _ctxA = savedA;
                     _ctxB = savedB;
+
+                    EncounterRecord * rec = calloc(1, sizeof(EncounterRecord));
+                    rec->generation      = state->currentGeneration;
+                    rec->ecosystemName   = strdup(eco->name);
+                    rec->regionName      = strdup(region->name);
+                    rec->speciesA        = strdup(b->speciesA);
+                    rec->energyABefore   = energyABefore;
+                    rec->energyAAfter    = energyAAfter;
+                    rec->speciesARemoved = aRemoved;
+                    rec->speciesB        = strdup(b->speciesB);
+                    rec->energyBBefore   = energyBBefore;
+                    rec->energyBAfter    = energyBAfter;
+                    rec->speciesBRemoved = bRemoved;
+                    rec->next            = state->encounterHistory;
+                    state->encounterHistory = rec;
                 }
             }
             indA = nxt;
         }
     }
 }
-
 
 static void _applyReproduction(SimulationState * state,
                                 RuntimeEcosystem * eco, RuntimeRegion * region) {
@@ -673,7 +679,6 @@ static void _applyReproduction(SimulationState * state,
     }
 }
 
-
 static void _applyMortality(SimulationState * state,
                              RuntimeEcosystem * eco, RuntimeRegion * region) {
     Individual * ind  = region->individuals;
@@ -682,24 +687,42 @@ static void _applyMortality(SimulationState * state,
     while (ind) {
         Individual * nxt  = ind->next;
         int          dead = 0;
+        ExtinctionCause cause = EXTINCTION_CAUSE_AGE; /* default; sobreescrito abajo */
 
         ind->age++;
 
         RuntimeSpecies * sp = _findSpecies(state, ind->speciesName);
         if (sp) {
-            if (ind->age    >= sp->lifespan) dead = 1;
-            if (ind->energy <= 0.0)          dead = 1;
+            if (ind->age    >= sp->lifespan) { dead = 1; cause = EXTINCTION_CAUSE_AGE;     }
+            if (ind->energy <= 0.0)          { dead = 1; cause = EXTINCTION_CAUSE_ENERGY;  }
             if (!dead && !_habitatCompatible(sp->habitat, region->habitat)
-                      && (rand() % 2) == 0)  dead = 1;
+                      && (rand() % 2) == 0)  { dead = 1; cause = EXTINCTION_CAUSE_HABITAT; }
         }
 
         if (dead) {
+            char * deadSpecies = strdup(ind->speciesName);
+
             logDebugging(_logger, "mortalidad: %s murió en %s.%s (age=%d, energy=%.1f)",
                          ind->speciesName, eco->name, region->name, ind->age, ind->energy);
-            if (prev) prev->next        = nxt;
-            else       region->individuals = nxt;
+
+            if (prev) prev->next           = nxt;
+            else       region->individuals  = nxt;
             free(ind->speciesName);
             free(ind);
+
+            if (_countInRegion(region, deadSpecies) == 0) {
+                ExtinctionRecord * rec = calloc(1, sizeof(ExtinctionRecord));
+                rec->generation    = state->currentGeneration;
+                rec->ecosystemName = strdup(eco->name);
+                rec->regionName    = strdup(region->name);
+                rec->speciesName   = strdup(deadSpecies);
+                rec->cause         = cause;
+                rec->next          = state->extinctionHistory;
+                state->extinctionHistory = rec;
+                logDebugging(_logger, "extinción: %s desapareció de %s.%s",
+                             deadSpecies, eco->name, region->name);
+            }
+            free(deadSpecies);
         } else {
             prev = ind;
         }
@@ -712,7 +735,6 @@ static RuntimeSpecies * _buildSpecies(SpeciesDefinition * def) {
     RuntimeSpecies * rs = calloc(1, sizeof(RuntimeSpecies));
     rs->name = strdup(def->name);
 
-    /* Valores por defecto razonables */
     rs->lifespan             = 10;
     rs->reproductionRate     = 0.3;
     rs->speed                = 5;
@@ -720,7 +742,6 @@ static RuntimeSpecies * _buildSpecies(SpeciesDefinition * def) {
     rs->reproductiveStrategy = K_SELECTED;
     rs->diet                 = HERBIVORE;
     rs->habitat              = TERRESTRIAL;
-    /* envTolerance queda en 0 (calloc) */
 
     for (SpeciesAttributeList * al = def->attributes; al; al = al->next) {
         SpeciesAttribute * a = al->attribute;
@@ -750,7 +771,6 @@ static RuntimeRegion * _buildRegion(RegionDefinition * def) {
     return rr;
 }
 
-
 SimulationState * initSimulation(Program * ast) {
     SimulationState * state = calloc(1, sizeof(SimulationState));
     state->currentGeneration = 0;
@@ -768,7 +788,6 @@ SimulationState * initSimulation(Program * ast) {
         for (EcosystemMemberList * ml = edef->members; ml; ml = ml->next) {
             EcosystemMember * mem = ml->member;
             if (mem->type == MEMBER_REGION) {
-                /* Buscar la definición de región en el programa */
                 for (StatementList * search = ast->statements; search; search = search->next) {
                     if (search->statement->type == STATEMENT_REGION &&
                         strcmp(search->statement->regionDefinition->name, mem->name) == 0) {
@@ -779,7 +798,6 @@ SimulationState * initSimulation(Program * ast) {
                     }
                 }
             } else if (mem->type == MEMBER_SPECIES) {
-                /* Buscar la definición de especie en el programa */
                 for (StatementList * search = ast->statements; search; search = search->next) {
                     if (search->statement->type == STATEMENT_SPECIES &&
                         strcmp(search->statement->speciesDefinition->name, mem->name) == 0) {
@@ -816,7 +834,7 @@ void runSimulation(SimulationState * state, SimulateStatement * cmd) {
 
     for (int g = 0; g < cmd->generations; g++) {
         state->currentGeneration++;
-        
+
         for (RuntimeRegion * region = eco->regions; region; region = region->next) {
             _applyOnGeneration(state, eco, region);
             _applyEveryRandom(state,  eco, region);
@@ -824,7 +842,7 @@ void runSimulation(SimulationState * state, SimulateStatement * cmd) {
             _applyReproduction(state, eco, region);
             _applyMortality(state,    eco, region);
         }
-        /*Registrar poblaciones */
+
         for (RuntimeRegion * region = eco->regions; region; region = region->next) {
             for (RuntimeSpecies * sp = eco->species; sp; sp = sp->next) {
                 PopulationRecord * rec = calloc(1, sizeof(PopulationRecord));
@@ -833,22 +851,23 @@ void runSimulation(SimulationState * state, SimulateStatement * cmd) {
                 rec->regionName    = strdup(region->name);
                 rec->speciesName   = strdup(sp->name);
                 rec->count         = _countInRegion(region, sp->name);
-                rec->next          = NULL;
-
-                if (state->history == NULL) {
-                    state->history = rec;
-                    state->historyTail = rec;
-                } else {
-                    state->historyTail->next = rec;
-                    state->historyTail = rec;
-                }
+                rec->next          = state->history;
+                state->history     = rec;
             }
+            EnvironmentRecord * env = calloc(1, sizeof(EnvironmentRecord));
+            env->generation    = state->currentGeneration;
+            env->ecosystemName = strdup(eco->name);
+            env->regionName    = strdup(region->name);
+            env->temperature   = region->temperature;
+            env->humidity      = region->humidity;
+            env->altitude      = region->altitude;
+            env->next          = state->environmentHistory;
+            state->environmentHistory = env;
         }
     }
 
     logDebugging(_logger, "simulate: finalizado (generación = %d).", state->currentGeneration);
 }
-
 
 int getPopulation(SimulationState * state, const char * ecosystemName,
                   const char * regionName, const char * speciesName) {
@@ -867,7 +886,6 @@ void destroySimulationState(SimulationState * state) {
     while (eco) {
         RuntimeEcosystem * nextEco = eco->next;
 
-        /* Liberar individuos y regiones */
         RuntimeRegion * region = eco->regions;
         while (region) {
             RuntimeRegion * nextReg = region->next;
@@ -883,7 +901,6 @@ void destroySimulationState(SimulationState * state) {
             region = nextReg;
         }
 
-        /* Liberar especies */
         RuntimeSpecies * sp = eco->species;
         while (sp) {
             RuntimeSpecies * nextSp = sp->next;
@@ -897,7 +914,6 @@ void destroySimulationState(SimulationState * state) {
         eco = nextEco;
     }
 
-    /* Liberar historial de snapshots */
     PopulationRecord * rec = state->history;
     while (rec) {
         PopulationRecord * nextRec = rec->next;
@@ -906,6 +922,38 @@ void destroySimulationState(SimulationState * state) {
         free(rec->speciesName);
         free(rec);
         rec = nextRec;
+    }
+
+    ExtinctionRecord * ext = state->extinctionHistory;
+    while (ext) {
+        ExtinctionRecord * nextExt = ext->next;
+        free(ext->ecosystemName);
+        free(ext->regionName);
+        free(ext->speciesName);
+        free(ext);
+        ext = nextExt;
+    }
+
+
+    EncounterRecord * enc = state->encounterHistory;
+    while (enc) {
+        EncounterRecord * nextEnc = enc->next;
+        free(enc->ecosystemName);
+        free(enc->regionName);
+        free(enc->speciesA);
+        free(enc->speciesB);
+        free(enc);
+        enc = nextEnc;
+    }
+
+ 
+    EnvironmentRecord * env = state->environmentHistory;
+    while (env) {
+        EnvironmentRecord * nextEnv = env->next;
+        free(env->ecosystemName);
+        free(env->regionName);
+        free(env);
+        env = nextEnv;
     }
 
     free(state);
