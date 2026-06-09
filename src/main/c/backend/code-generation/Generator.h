@@ -8,6 +8,7 @@
 #include "../../support/type/CompilationStatus.h"
 #include "../../support/type/ModuleDestructor.h"
 #include "./json/JsonWriter.h"
+#include "./html/HtmlWriter.h"
 #include <stdarg.h>
 #include <stdio.h>
 

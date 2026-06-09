@@ -48,9 +48,9 @@ const int main(const int length, const char ** arguments) {
 			logDebugging(logger, "Starting simulation engine...");
 			compilerState.simulationState = executeEngine(&compilerState);	// inicializa y ejecuta simulación
 		    logDebugging(logger, "Generating outputs...");
-			executeGenerator(&compilerState);  // Uncomment when Generator is ready
+			executeGenerator(&compilerState);
 
-		} else {
+		} else {//src\test\c\accept\01-ecosystem-basic
 			logError(logger, "The semantic analysis phase rejects the input program.");
 			compilationStatus = FAILED;
 		}

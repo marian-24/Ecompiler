@@ -30,14 +30,16 @@ void executeGenerator(CompilerState * compilerState) {
 	logDebugging(_logger, "simulation.json generated.");
 
 	logDebugging(_logger, "Generating HTML output...");
-	/*FILE * htmlFile = fopen("simulation.html", "w");
-    if (htmlFile != NULL) {
-        writeHTML(
-            htmlFile,
-            compilerState->simulationState
-        );
-        fclose(htmlFile);
-    } */
+	FILE * htmlFile = fopen("simulation.html", "w");
+	if (htmlFile == NULL) {
+		logError(_logger, "Could not create simulation.html");
+    	perror("simulation.html");
+    	return;
+	}
+    writeHTML(htmlFile, compilerState->simulationState);
+    fclose(htmlFile);
+	logDebugging(_logger, "simulation.html generated.");
+
 
 	logDebugging(_logger, "Generation is done.");
 }

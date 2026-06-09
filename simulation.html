@@ -1,0 +1,35 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>Simulation Report</title><style>body{ font-family:Arial,sans-serif;margin:40px; }h1,h2{ color: #3c0651; }table{ border-collapse:collapse;width:100%%;margin-bottom:20px; }th,td{ border:1px solid #ddd;padding:8px;text-align:center; }th{ background: #722192;color:white; }tr:nth-child(even){ background: #f2f2f2; }canvas{ margin-bottom:40px; }</style><script src='https://cdn.jsdelivr.net/npm/chart.js'></script></head><body><h1>Simulation Report</h1><h2>Simulation Summary</h2>
+<table>
+<tr><th>Generations</th><th>Ecosystems</th><th>Regions</th><th>Species</th><th>Encounters</th><th>Extinctions</th></tr>
+<tr><td>10</td><td>1</td><td>1</td><td>2</td><td>58</td><td>60</td></tr>
+</table>
+<h2>Species Summary</h2><table><tr><th>Species</th><th>Final Population</th></tr><tr><td>Puma</td><td>13</td></tr><tr><td>Guanaco</td><td>0</td></tr></table>
+<h2>Population Evolution</h2>
+<canvas id='populationChart'></canvas>
+<script>
+new Chart(document.getElementById('populationChart'), {
+type: 'line',
+data: {
+labels: [1,2,3,4,5,6,7,8,9,10],
+datasets:[
+{label:'Puma',borderColor:'#c36ae6',fill:false,data:[11,11,11,11,11,12,13,13,13,13]},
+{label:'Guanaco',borderColor:'#6d32da',fill:false,data:[16,14,11,5,2,0,0,0,0,0]}]
+},
+options:{
+responsive:true,
+plugins:{
+legend:{display:true}
+},
+scales:{
+y:{beginAtZero:true}
+}
+}
+});
+</script>
+<h2>Extinctions Summary</h2>
+<table><tr><th>Ecosystem</th><th>Region</th><th>Species</th><th>Cause</th><th>Events</th></tr><tr><td>Patagonia</td><td>Bosque</td><td>Guanaco</td><td>Encounter</td><td>60</td></tr></table>
+<h2>Encounter Summary</h2>
+<table><tr><th>Species A</th><th>Species B</th><th>Encounters</th><th>A removals</th><th>B removals</th></tr><tr><td>Puma</td><td>Guanaco</td><td>58</td><td>0</td><td>7</td></tr></table>
+<h2>Environmental Changes</h2>
+<table><tr><th>Generation</th><th>Region</th><th>Temperature</th><th>Humidity</th><th>Altitude</th></tr><tr><td>1</td><td>Bosque</td><td>20</td><td>70</td><td>800</td></tr></table>
+<p>No environmental changes detected during simulation.</p></body></html>
