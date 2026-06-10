@@ -18,7 +18,7 @@
 *.csproj.user
 *~
 *.json
-
+*.html
 # Application specific.
 /program
 /subexp
