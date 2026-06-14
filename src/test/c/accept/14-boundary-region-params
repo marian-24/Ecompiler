@@ -1,0 +1,22 @@
+//Parametros de region en los limites exactos del rango valido
+
+region BordeSuperior {
+    temperature = 60;
+    humidity = 100;
+    altitude = 0;
+    carryingCapacity = 50;
+    habitat = TERRESTRIAL;
+}
+
+region BordeInferior {
+    temperature = 0;
+    humidity = 0;
+    altitude = 9000;
+    carryingCapacity = 50;
+    habitat = AQUATIC;
+}
+
+ecosystem Bordes {
+    region BordeSuperior;
+    region BordeInferior;
+}

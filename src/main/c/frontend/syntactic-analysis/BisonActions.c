@@ -174,6 +174,7 @@ Statement * IntDeclarationSemanticAction(char * name, Expression * value) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	AttributeAssignment * assignment = calloc(1, sizeof(AttributeAssignment));
 	assignment->objectName    = strdup(name);
+	free(name);
 	assignment->attributeName = strdup("");   /* sin objeto – variable local */
 	assignment->op            = ASSIGN_SIMPLE;
 	assignment->value         = value;
@@ -187,6 +188,7 @@ Statement * FloatDeclarationSemanticAction(char * name, Expression * value) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	AttributeAssignment * assignment = calloc(1, sizeof(AttributeAssignment));
 	assignment->objectName    = strdup(name);
+	free(name);
 	assignment->attributeName = strdup("");
 	assignment->op            = ASSIGN_SIMPLE;
 	assignment->value         = value;
@@ -200,6 +202,7 @@ Statement * StringDeclarationSemanticAction(char * name, Expression * value) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	AttributeAssignment * assignment = calloc(1, sizeof(AttributeAssignment));
 	assignment->objectName    = strdup(name);
+	free(name);
 	assignment->attributeName = strdup("");
 	assignment->op            = ASSIGN_SIMPLE;
 	assignment->value         = value;
@@ -213,6 +216,7 @@ Statement * BooleanDeclarationSemanticAction(char * name, Expression * value) {
 	_logSyntacticAnalyzerAction(__FUNCTION__);
 	AttributeAssignment * assignment = calloc(1, sizeof(AttributeAssignment));
 	assignment->objectName    = strdup(name);
+	free(name);
 	assignment->attributeName = strdup("");
 	assignment->op            = ASSIGN_SIMPLE;
 	assignment->value         = value;

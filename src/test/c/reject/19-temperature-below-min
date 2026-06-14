@@ -1,0 +1,13 @@
+//Intenta crear una region con temperatura por debajo del minimo (-50)
+
+region BosqueCongelado {
+    temperature = -60;
+    humidity = 70;
+    altitude = 800;
+    carryingCapacity = 200;
+    habitat = TERRESTRIAL;
+}
+
+ecosystem Patagonia {
+    region BosqueCongelado;
+}

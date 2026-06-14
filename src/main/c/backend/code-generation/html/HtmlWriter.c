@@ -1,6 +1,9 @@
 #include "HtmlWriter.h"
 #include "../../../support/logging/Logger.h"
 #include "../../../support/type/CompilerState.h"
+/* Para traducir los TokenLabel de estrategia/dieta/hábitat (R_SELECTED, HERBIVORE,
+   TERRESTRIAL, ...) a texto legible. Es el mismo header que ya usa SimulationEngine.c. */
+#include "../../../frontend/syntactic-analysis/BisonParser.h"
 
 static void _writePopulationChart(FILE * out, SimulationState * state);
 static void _writeSummaryTable(FILE * out, SimulationState * state);
@@ -8,6 +11,12 @@ static void _writeSpeciesSummary(FILE * out, SimulationState * state);
 static void _writeEncounterTable(FILE * out, SimulationState * state);
 static void _writeExtinctionTable(FILE * out, SimulationState * state);
 static void _writeEnvironmentTable(FILE * out, SimulationState * state);
+
+// Nuevas secciones del reporte
+static void _writeSpeciesTraitsTable(FILE * out, SimulationState * state);
+static void _writeExtinctionCauseChart(FILE * out, SimulationState * state);
+static void _writeCapacityChart(FILE * out, SimulationState * state);
+static void _writeEnergyBalanceChart(FILE * out, SimulationState * state);
 
 //Helpers
 static int _countExtinctions(ExtinctionRecord * history);
@@ -24,6 +33,21 @@ static EncounterSummary *_findEncounterSummary(EncounterSummary * list,const cha
 static void _htmlBegin(FILE * out, const char * title);
 static void _htmlEnd(FILE * out);
 static int _environmentChanged(EnvironmentRecord * a,EnvironmentRecord * b);
+
+// Helpers de las nuevas secciones
+static const char * _strategyToString(TokenLabel strategy);
+static const char * _dietToString(TokenLabel diet);
+static const char * _habitatToString(TokenLabel habitat);
+static int _totalPopulationAtGeneration(SimulationState * state, int generation);
+static int _totalCarryingCapacity(RuntimeEcosystem * ecosystems);
+
+// Acumulador de energía por especie para el balance de encuentros
+typedef struct EnergyAccum {
+    const char *         species;
+    double               netDelta;   // suma de (energía después - energía antes)
+    struct EnergyAccum * next;
+} EnergyAccum;
+static EnergyAccum * _findEnergyAccum(EnergyAccum * list, const char * species);
 // para el chart
 static const char * COLORS[] = {
     "#c36ae6",
@@ -40,7 +64,7 @@ static const char * HTML_STYLE =
     "<style>"
     "body{ font-family:Arial,sans-serif;margin:40px; }"
     "h1,h2{ color: #3c0651; }"
-    "table{ border-collapse:collapse;width:100%%;margin-bottom:20px; }"
+    "table{ border-collapse:collapse;width:100%;margin-bottom:20px; }"
     "th,td{ border:1px solid #ddd;padding:8px;text-align:center; }"
     "th{ background: #722192;color:white; }"
     "tr:nth-child(even){ background: #f2f2f2; }"
@@ -54,11 +78,17 @@ void writeHTML(FILE * out, SimulationState * state) {
 
     _writeSummaryTable(out, state);
     _writeSpeciesSummary(out, state);
+    _writeSpeciesTraitsTable(out, state);      // B: ficha técnica de especies
 
     _writePopulationChart(out, state);
+    _writeCapacityChart(out, state);           // C: población total vs capacidad de carga
 
     _writeExtinctionTable(out, state);
+    _writeExtinctionCauseChart(out, state);    // A: extinciones por causa (dona)
+
     _writeEncounterTable(out, state);
+    _writeEnergyBalanceChart(out, state);      // F: balance energético en encuentros
+
     _writeEnvironmentTable(out, state);
 
     _htmlEnd(out);
@@ -348,6 +378,242 @@ static void _writePopulationChart(FILE * out, SimulationState * state){
 }
 
 
+/* ============================================================
+ *  NUEVAS SECCIONES DEL REPORTE
+ * ============================================================ */
+
+/* B: ficha técnica con los rasgos (finales) de cada especie del ecosistema. */
+static void _writeSpeciesTraitsTable(FILE * out, SimulationState * state) {
+    fprintf(out,
+        "<h2>Species Traits</h2>"
+        "<table>"
+        "<tr>"
+        "<th>Species</th>"
+        "<th>Lifespan</th>"
+        "<th>Speed</th>"
+        "<th>Repro. rate</th>"
+        "<th>Initial energy</th>"
+        "<th>Strategy</th>"
+        "<th>Diet</th>"
+        "<th>Habitat</th>"
+        "<th>Tolerance T / H / A</th>"
+        "</tr>"
+    );
+
+    for (RuntimeEcosystem * eco = state->ecosystems; eco; eco = eco->next) {
+        for (RuntimeSpecies * sp = eco->species; sp; sp = sp->next) {
+            EnvTolerance t = sp->envTolerance;
+            int hasTolerance = t.temperature.min || t.temperature.max ||
+                               t.humidity.min    || t.humidity.max    ||
+                               t.altitude.min    || t.altitude.max;
+
+            fprintf(out,
+                "<tr>"
+                "<td>%s</td>"
+                "<td>%d</td>"
+                "<td>%d</td>"
+                "<td>%.2f</td>"
+                "<td>%.1f</td>"
+                "<td>%s</td>"
+                "<td>%s</td>"
+                "<td>%s</td>",
+                sp->name,
+                sp->lifespan,
+                sp->speed,
+                sp->reproductionRate,
+                sp->initialEnergy,
+                _strategyToString(sp->reproductiveStrategy),
+                _dietToString(sp->diet),
+                _habitatToString(sp->habitat)
+            );
+
+            if (hasTolerance)
+                fprintf(out,
+                    "<td>[%d, %d] / [%d, %d] / [%d, %d]</td></tr>",
+                    t.temperature.min, t.temperature.max,
+                    t.humidity.min,    t.humidity.max,
+                    t.altitude.min,    t.altitude.max
+                );
+            else
+                fprintf(out, "<td>&mdash;</td></tr>");
+        }
+    }
+
+    fprintf(out, "</table>\n");
+}
+
+/* A: distribución de las extinciones según su causa (gráfico de dona). */
+static void _writeExtinctionCauseChart(FILE * out, SimulationState * state) {
+    fprintf(out, "<h2>Extinctions by Cause</h2>\n");
+
+    int byCause[4] = { 0, 0, 0, 0 };  /* AGE, ENERGY, HABITAT, REMOVED */
+    int total = 0;
+    for (ExtinctionRecord * e = state->extinctionHistory; e; e = e->next) {
+        int c = (int) e->cause;
+        if (c >= 0 && c <= 3) { byCause[c]++; total++; }
+    }
+
+    if (total == 0) {
+        fprintf(out, "<p>No extinctions were recorded during the simulation.</p>");
+        return;
+    }
+
+    fprintf(out,
+        "<canvas id='extinctionCauseChart'></canvas>\n"
+        "<script>\n"
+        "new Chart(document.getElementById('extinctionCauseChart'), {\n"
+        "type:'doughnut',\n"
+        "data:{\n"
+        "labels:['Age','Energy','Habitat','Encounter'],\n"
+        "datasets:[{\n"
+        "data:[%d,%d,%d,%d],\n"
+        "backgroundColor:['%s','%s','%s','%s']\n"
+        "}]\n"
+        "},\n"
+        "options:{responsive:true,plugins:{legend:{position:'bottom'}}}\n"
+        "});\n"
+        "</script>\n",
+        byCause[0], byCause[1], byCause[2], byCause[3],
+        COLORS[1], COLORS[4], COLORS[7], COLORS[3]
+    );
+}
+
+/* C: población total del ecosistema generación a generación, contra el
+   techo de capacidad de carga (suma de carryingCapacity de las regiones). */
+static void _writeCapacityChart(FILE * out, SimulationState * state) {
+    fprintf(out, "<h2>Total Population vs Carrying Capacity</h2>\n");
+
+    if (state->currentGeneration <= 0) {
+        fprintf(out, "<p>No generations were simulated.</p>");
+        return;
+    }
+
+    int capacity = _totalCarryingCapacity(state->ecosystems);
+
+    fprintf(out,
+        "<canvas id='capacityChart'></canvas>\n"
+        "<script>\n"
+        "new Chart(document.getElementById('capacityChart'), {\n"
+        "type:'line',\n"
+        "data:{\n"
+        "labels:["
+    );
+    for (int g = 1; g <= state->currentGeneration; g++) {
+        fprintf(out, "%d", g);
+        if (g < state->currentGeneration) fprintf(out, ",");
+    }
+
+    fprintf(out,
+        "],\n"
+        "datasets:[\n"
+        "{label:'Total population',borderColor:'%s',fill:false,data:[",
+        COLORS[1]
+    );
+    for (int g = 1; g <= state->currentGeneration; g++) {
+        fprintf(out, "%d", _totalPopulationAtGeneration(state, g));
+        if (g < state->currentGeneration) fprintf(out, ",");
+    }
+
+    fprintf(out,
+        "]},\n"
+        "{label:'Carrying capacity',borderColor:'%s',borderDash:[6,6],fill:false,data:[",
+        COLORS[7]
+    );
+    for (int g = 1; g <= state->currentGeneration; g++) {
+        fprintf(out, "%d", capacity);
+        if (g < state->currentGeneration) fprintf(out, ",");
+    }
+
+    fprintf(out,
+        "]}\n"
+        "]\n"
+        "},\n"
+        "options:{responsive:true,scales:{y:{beginAtZero:true}}}\n"
+        "});\n"
+        "</script>\n"
+    );
+}
+
+/* F: energía neta ganada (verde) o perdida (rojo) por cada especie a lo
+   largo de todos los encuentros en que el individuo sobrevivió. */
+static void _writeEnergyBalanceChart(FILE * out, SimulationState * state) {
+    fprintf(out, "<h2>Energy Balance in Encounters</h2>\n");
+
+    EnergyAccum * accums = NULL;
+    for (EncounterRecord * e = state->encounterHistory; e; e = e->next) {
+        /* energyAfter == -1.0 es un centinela para "individuo removido":
+           sólo acumulamos cuando el individuo sobrevivió al encuentro. */
+        if (!e->speciesARemoved) {
+            EnergyAccum * a = _findEnergyAccum(accums, e->speciesA);
+            if (!a) {
+                a = calloc(1, sizeof(EnergyAccum));
+                a->species = e->speciesA;
+                a->next = accums;
+                accums = a;
+            }
+            a->netDelta += (e->energyAAfter - e->energyABefore);
+        }
+        if (!e->speciesBRemoved) {
+            EnergyAccum * b = _findEnergyAccum(accums, e->speciesB);
+            if (!b) {
+                b = calloc(1, sizeof(EnergyAccum));
+                b->species = e->speciesB;
+                b->next = accums;
+                accums = b;
+            }
+            b->netDelta += (e->energyBAfter - e->energyBBefore);
+        }
+    }
+
+    if (!accums) {
+        fprintf(out, "<p>No encounters with surviving individuals were recorded.</p>");
+        return;
+    }
+
+    fprintf(out,
+        "<canvas id='energyBalanceChart'></canvas>\n"
+        "<script>\n"
+        "new Chart(document.getElementById('energyBalanceChart'), {\n"
+        "type:'bar',\n"
+        "data:{\n"
+        "labels:["
+    );
+    for (EnergyAccum * a = accums; a; a = a->next)
+        fprintf(out, "'%s'%s", a->species, a->next ? "," : "");
+
+    fprintf(out,
+        "],\n"
+        "datasets:[{\n"
+        "label:'Net energy change',\n"
+        "data:["
+    );
+    for (EnergyAccum * a = accums; a; a = a->next)
+        fprintf(out, "%.2f%s", a->netDelta, a->next ? "," : "");
+
+    fprintf(out,
+        "],\n"
+        "backgroundColor:["
+    );
+    for (EnergyAccum * a = accums; a; a = a->next)
+        fprintf(out, "'%s'%s", a->netDelta >= 0 ? "#1aa855" : "#c0392b", a->next ? "," : "");
+
+    fprintf(out,
+        "]\n"
+        "}]\n"
+        "},\n"
+        "options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}\n"
+        "});\n"
+        "</script>\n"
+    );
+
+    while (accums) {
+        EnergyAccum * next = accums->next;
+        free(accums);
+        accums = next;
+    }
+}
+
+
 /*=====HELPERS====== */
 static void _htmlBegin(FILE * out, const char * title) {
     fprintf(out,
@@ -463,6 +729,62 @@ static EncounterSummary *_findEncounterSummary(EncounterSummary * list,const cha
         if (strcmp(list->speciesA, a) == 0 &&
             strcmp(list->speciesB, b) == 0)
             return list;
+        list = list->next;
+    }
+    return NULL;
+}
+
+/* Los valores de estrategia/dieta/hábitat se guardan como TokenLabel, que en
+   runtime contiene el valor del token de Bison (R_SELECTED, HERBIVORE, ...).
+   El cast a int evita warnings al hacer switch sobre constantes de otro enum. */
+static const char * _strategyToString(TokenLabel strategy) {
+    switch ((int) strategy) {
+        case R_SELECTED:
+        case R_STRATEGY: return "r-selected";
+        case K_SELECTED:
+        case K_STRATEGY: return "K-selected";
+        default:         return "&mdash;";
+    }
+}
+
+static const char * _dietToString(TokenLabel diet) {
+    switch ((int) diet) {
+        case HERBIVORE:  return "Herbivore";
+        case CARNIVORE:  return "Carnivore";
+        case OMNIVORE:   return "Omnivore";
+        case DECOMPOSER: return "Decomposer";
+        default:         return "&mdash;";
+    }
+}
+
+static const char * _habitatToString(TokenLabel habitat) {
+    switch ((int) habitat) {
+        case TERRESTRIAL: return "Terrestrial";
+        case AQUATIC:     return "Aquatic";
+        case AMPHIBIOUS:  return "Amphibious";
+        case MIXED:       return "Mixed";
+        default:          return "&mdash;";
+    }
+}
+
+static int _totalPopulationAtGeneration(SimulationState * state, int generation) {
+    int total = 0;
+    for (PopulationRecord * p = state->history; p; p = p->next)
+        if (p->generation == generation) total += p->count;
+    return total;
+}
+
+static int _totalCarryingCapacity(RuntimeEcosystem * ecosystems) {
+    int total = 0;
+    for (RuntimeEcosystem * eco = ecosystems; eco; eco = eco->next)
+        for (RuntimeRegion * r = eco->regions; r; r = r->next)
+            total += r->carryingCapacity;
+    return total;
+}
+
+static EnergyAccum * _findEnergyAccum(EnergyAccum * list, const char * species) {
+    while (list) {
+        if (strcmp(list->species, species) == 0) return list;
         list = list->next;
     }
     return NULL;

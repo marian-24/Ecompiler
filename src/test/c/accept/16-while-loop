@@ -1,0 +1,33 @@
+//Bucle while sobre la poblacion de una especie
+
+species Puma = createSpecies {
+    int lifespan = 15;
+    float reproductionRate = 0.4;
+    int speed = 8;
+    reproductionStrategy = reproductionStrategy.K_SELECTED;
+    diet = diet.CARNIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [5, 35];
+    .humidity = [30, 80];
+    .altitude = [0, 4000];
+}
+
+region Bosque {
+    temperature = 20;
+    humidity = 70;
+    altitude = 800;
+    carryingCapacity = 200;
+    habitat = TERRESTRIAL;
+}
+
+ecosystem Patagonia {
+    region Bosque;
+    species Puma;
+}
+
+add 10 Puma to Patagonia.Bosque;
+
+while (population of Puma in Patagonia.Bosque > 0) {
+    Puma.energy -= 1;
+}

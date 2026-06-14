@@ -1,0 +1,30 @@
+//Especie anfibia (AMPHIBIOUS) en una region de habitat mixto (MIXED)
+
+species Rana = createSpecies {
+    int lifespan = 5;
+    float reproductionRate = 0.6;
+    int speed = 3;
+    reproductionStrategy = reproductionStrategy.R_SELECTED;
+    diet = diet.OMNIVORE;
+    habitat = habitat.AMPHIBIOUS;
+    environmentalTolerance;
+    .temperature = [10, 30];
+    .humidity = [40, 100];
+    .altitude = [0, 2000];
+}
+
+region Humedal {
+    temperature = 22;
+    humidity = 85;
+    altitude = 100;
+    carryingCapacity = 120;
+    habitat = MIXED;
+}
+
+ecosystem Delta {
+    region Humedal;
+    species Rana;
+}
+
+add 15 Rana to Delta.Humedal;
+simulate Delta for 6 generations;

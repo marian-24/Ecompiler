@@ -1,0 +1,52 @@
+//Condiciones compuestas con operadores logicos AND, OR y NOT
+
+species Puma = createSpecies {
+    int lifespan = 15;
+    float reproductionRate = 0.4;
+    int speed = 8;
+    reproductionStrategy = reproductionStrategy.K_SELECTED;
+    diet = diet.CARNIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [5, 35];
+    .humidity = [30, 80];
+    .altitude = [0, 4000];
+}
+
+species Guanaco = createSpecies {
+    int lifespan = 8;
+    float reproductionRate = 0.5;
+    int speed = 6;
+    reproductionStrategy = reproductionStrategy.R_SELECTED;
+    diet = diet.HERBIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [0, 40];
+    .humidity = [20, 90];
+    .altitude = [0, 5000];
+}
+
+region Bosque {
+    temperature = 20;
+    humidity = 70;
+    altitude = 800;
+    carryingCapacity = 200;
+    habitat = TERRESTRIAL;
+}
+
+ecosystem Patagonia {
+    region Bosque;
+    species Puma;
+    species Guanaco;
+}
+
+add 10 Puma to Patagonia.Bosque;
+add 10 Guanaco to Patagonia.Bosque;
+
+if (Puma.speed > 5 AND Guanaco.speed < 10) {
+    log population of Puma in Patagonia.Bosque;
+}
+
+if (NOT (Guanaco in Patagonia.Bosque) OR Puma.lifespan >= 10) {
+    log generation;
+}

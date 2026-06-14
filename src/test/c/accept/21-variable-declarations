@@ -1,0 +1,18 @@
+//Declaracion de variables de los cuatro tipos primitivos
+
+region Bosque {
+    temperature = 20;
+    humidity = 70;
+    altitude = 800;
+    carryingCapacity = 200;
+    habitat = TERRESTRIAL;
+}
+
+ecosystem Patagonia {
+    region Bosque;
+}
+
+int contador = 5;
+float tasa = 0.75;
+string nombre = "Patagonia";
+boolean activo = true;

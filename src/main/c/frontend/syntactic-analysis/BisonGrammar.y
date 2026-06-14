@@ -242,6 +242,8 @@ Son reconocidos por Flex y tienen valor semántico*/
 %type <token> 				 dietValue
 %type <token> 				 habitatSpeciesValue
 %type <token> 				 habitatRegionValue
+%type <integer>              signedInteger
+%type <decimal>              signedFloat
 %type <regionDefinition>     regionDefinition
 
 %type <ecosystemDefinition>  ecosystemDefinition
@@ -282,6 +284,7 @@ Son reconocidos por Flex y tienen valor semántico*/
 %left LT GT EQ NEQ LTE GTE
 %left ADD_OP SUB_OP
 %left MUL_OP DIV_OP
+%precedence UMINUS
 
 %precedence "then"
 %precedence ELSE
@@ -370,13 +373,13 @@ speciesAttributeList: speciesAttribute
 	{ $$ = SpeciesAttributeListSemanticAction($2, $1); }
 	;
 
-speciesAttribute: INT_TYPE LIFESPAN ASSIGN INTEGER SEMICOLON
+speciesAttribute: INT_TYPE LIFESPAN ASSIGN signedInteger SEMICOLON
 	{ $$ = LifespanAttributeSemanticAction($4); }
-	| FLOAT_TYPE ENERGY ASSIGN FLOAT SEMICOLON
+	| FLOAT_TYPE ENERGY ASSIGN signedFloat SEMICOLON
 	{ $$ = EnergyAttributeSemanticAction($4); }
-	| FLOAT_TYPE REPRODUCTION_RATE ASSIGN FLOAT SEMICOLON
+	| FLOAT_TYPE REPRODUCTION_RATE ASSIGN signedFloat SEMICOLON
 	{ $$ = ReproductionRateAttributeSemanticAction($4); }
-	| INT_TYPE SPEED ASSIGN INTEGER SEMICOLON
+	| INT_TYPE SPEED ASSIGN signedInteger SEMICOLON
 	{ $$ = SpeedAttributeSemanticAction($4); }
 	| REPRODUCTION_STRATEGY ASSIGN REPRODUCTION_STRATEGY DOT reproductiveStrategyValue SEMICOLON
 	{ $$ = ReproductiveStrategyAttributeSemanticAction($5); }
@@ -411,15 +414,25 @@ habitatSpeciesValue: TERRESTRIAL    { $$ = TERRESTRIAL; }
 	| AMPHIBIOUS                    { $$ = AMPHIBIOUS; }
 	;
 
-rangeValue: OPEN_BRACKET INTEGER[min] COMMA INTEGER[max] CLOSE_BRACKET
+rangeValue: OPEN_BRACKET signedInteger[min] COMMA signedInteger[max] CLOSE_BRACKET
 	{ $$ = RangeValueSemanticAction($min, $max); }
 	;
 
+/* Un literal numerico con signo opcional. El '-' se absorbe aqui (no en el
+   lexer) para no chocar con el operador de resta binaria. */
+signedInteger: INTEGER       { $$ = $1; }
+    | SUB_OP INTEGER         { $$ = -$2; }
+    ;
+
+signedFloat: FLOAT           { $$ = $1; }
+    | SUB_OP FLOAT           { $$ = -$2; }
+    ;
+
 regionDefinition: REGION ID[name] OPEN_BRACE
-                      TEMPERATURE ASSIGN INTEGER[temp] SEMICOLON
-                      HUMIDITY ASSIGN INTEGER[hum] SEMICOLON
-                      ALTITUDE ASSIGN INTEGER[alt] SEMICOLON
-                      CARRYING_CAPACITY ASSIGN INTEGER[cap] SEMICOLON
+                      TEMPERATURE ASSIGN signedInteger[temp] SEMICOLON
+                      HUMIDITY ASSIGN signedInteger[hum] SEMICOLON
+                      ALTITUDE ASSIGN signedInteger[alt] SEMICOLON
+                      CARRYING_CAPACITY ASSIGN signedInteger[cap] SEMICOLON
                       HABITAT ASSIGN habitatRegionValue[hab] SEMICOLON
                   CLOSE_BRACE
 	{ $$ = RegionDefinitionSemanticAction($name, $temp, $hum, $alt, $cap, $hab); }
@@ -565,6 +578,8 @@ expression: INTEGER
 	{ $$ = BinaryExpressionSemanticAction($left, $right, EXPR_DIV); }
 	| OPEN_PAREN expression CLOSE_PAREN
 	{ $$ = $2; }
+	| SUB_OP expression %prec UMINUS
+	{ $$ = BinaryExpressionSemanticAction(IntegerExpressionSemanticAction(0), $2, EXPR_SUB); }
 	;
 
 /** Conditions*/

@@ -1,0 +1,38 @@
+//Numeros negativos en valores de atributos, rangos y expresiones
+
+species Glaciar = createSpecies {
+    int lifespan = 20;
+    float reproductionRate = 0.3;
+    int speed = 4;
+    reproductionStrategy = reproductionStrategy.K_SELECTED;
+    diet = diet.CARNIVORE;
+    habitat = habitat.AQUATIC;
+    environmentalTolerance;
+    .temperature = [-40, 5];
+    .humidity = [60, 100];
+    .altitude = [0, 1000];
+}
+
+region Antartida {
+    temperature = -30;
+    humidity = 80;
+    altitude = 100;
+    carryingCapacity = 50;
+    habitat = AQUATIC;
+}
+
+ecosystem Polo {
+    region Antartida;
+    species Glaciar;
+}
+
+int ajuste = -10;
+
+add 10 Glaciar to Polo.Antartida;
+
+on generation 2 in Polo.Antartida {
+    temperature -= 5;
+    Glaciar.energy = -5;
+}
+
+simulate Polo for 5 generations;
