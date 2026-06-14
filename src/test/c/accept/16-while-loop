@@ -31,3 +31,5 @@ add 10 Puma to Patagonia.Bosque;
 while (population of Puma in Patagonia.Bosque > 0) {
     Puma.energy -= 1;
 }
+
+simulate Patagonia for 10 generations;
