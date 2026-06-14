@@ -14,6 +14,7 @@ static void _writeEnvironmentTable(FILE * out, SimulationState * state);
 
 // Nuevas secciones del reporte
 static void _writeSpeciesTraitsTable(FILE * out, SimulationState * state);
+static void _writeToleranceTable(FILE * out, SimulationState * state);
 static void _writeExtinctionCauseChart(FILE * out, SimulationState * state);
 static void _writeCapacityChart(FILE * out, SimulationState * state);
 static void _writeEnergyBalanceChart(FILE * out, SimulationState * state);
@@ -79,6 +80,7 @@ void writeHTML(FILE * out, SimulationState * state) {
     _writeSummaryTable(out, state);
     _writeSpeciesSummary(out, state);
     _writeSpeciesTraitsTable(out, state);      // B: ficha técnica de especies
+    _writeToleranceTable(out, state);          // tolerancia ambiental (T/H/A expandida)
 
     _writePopulationChart(out, state);
     _writeCapacityChart(out, state);           // C: población total vs capacidad de carga
@@ -269,6 +271,16 @@ static void _writeExtinctionTable(FILE * out, SimulationState * state) {
     }
 }
 
+/* Lleva el ultimo estado ambiental visto de CADA region, para detectar cambios
+   por region. La version anterior usaba un unico 'prev' global y comparaba
+   registros consecutivos aunque fueran de regiones distintas: con mas de una
+   region marcaba cambios inexistentes y nunca mostraba "sin cambios". */
+typedef struct EnvSeen {
+    const char *        region;
+    EnvironmentRecord * last;
+    struct EnvSeen *    next;
+} EnvSeen;
+
 static void _writeEnvironmentTable(FILE * out, SimulationState * state) {
     fprintf(out,"<h2>Environmental Changes</h2>\n");
     fprintf(out,
@@ -281,11 +293,20 @@ static void _writeEnvironmentTable(FILE * out, SimulationState * state) {
         "<th>Altitude</th>"
         "</tr>"
     );
-    EnvironmentRecord * prev = NULL;
-    int changes = 0;
+
+    EnvSeen * seen = NULL;
+    int realChanges = 0;   /* cambios temporales reales (excluye el estado inicial de cada region) */
+
     for (EnvironmentRecord * e = state->environmentHistory; e; e = e->next) {
-        if (prev && !_environmentChanged(prev,e)) continue;
-        changes++;
+        EnvSeen * s = seen;
+        while (s && strcmp(s->region, e->regionName) != 0) s = s->next;
+
+        int isNewRegion = (s == NULL);
+        /* Misma region sin cambios respecto a su ultimo estado: nada que mostrar. */
+        if (!isNewRegion && !_environmentChanged(s->last, e)) continue;
+
+        if (!isNewRegion) realChanges++;   /* la primera fila de una region es su estado inicial, no un cambio */
+
         fprintf(out,
             "<tr>"
             "<td>%d</td>"
@@ -301,11 +322,25 @@ static void _writeEnvironmentTable(FILE * out, SimulationState * state) {
             e->humidity,
             e->altitude
         );
-        prev = e;
+
+        if (isNewRegion) {
+            s = calloc(1, sizeof(EnvSeen));
+            s->region = e->regionName;
+            s->next   = seen;
+            seen      = s;
+        }
+        s->last = e;
     }
 
     fprintf(out,"</table>\n");
-    if (changes <= 1) fprintf(out,"<p>No environmental changes detected during simulation.</p>");
+    if (realChanges == 0)
+        fprintf(out,"<p>No environmental changes detected during the simulation.</p>");
+
+    while (seen) {
+        EnvSeen * n = seen->next;
+        free(seen);
+        seen = n;
+    }
 }
 
 static void _writePopulationChart(FILE * out, SimulationState * state){
@@ -396,7 +431,49 @@ static void _writeSpeciesTraitsTable(FILE * out, SimulationState * state) {
         "<th>Strategy</th>"
         "<th>Diet</th>"
         "<th>Habitat</th>"
-        "<th>Tolerance T / H / A</th>"
+        "</tr>"
+    );
+
+    for (RuntimeEcosystem * eco = state->ecosystems; eco; eco = eco->next) {
+        for (RuntimeSpecies * sp = eco->species; sp; sp = sp->next) {
+            fprintf(out,
+                "<tr>"
+                "<td>%s</td>"
+                "<td>%d</td>"
+                "<td>%d</td>"
+                "<td>%.2f</td>"
+                "<td>%.1f</td>"
+                "<td>%s</td>"
+                "<td>%s</td>"
+                "<td>%s</td>"
+                "</tr>",
+                sp->name,
+                sp->lifespan,
+                sp->speed,
+                sp->reproductionRate,
+                sp->initialEnergy,
+                _strategyToString(sp->reproductiveStrategy),
+                _dietToString(sp->diet),
+                _habitatToString(sp->habitat)
+            );
+        }
+    }
+
+    fprintf(out, "</table>\n");
+}
+
+/* Tolerancia ambiental por especie. Antes era una sola columna "T / H / A" cuyas
+   siglas no se entendian; ahora va en su propia tabla, una columna por variable
+   con el nombre completo y la unidad, y el rango [min, max] en cada celda. */
+static void _writeToleranceTable(FILE * out, SimulationState * state) {
+    fprintf(out,
+        "<h2>Environmental Tolerance</h2>"
+        "<table>"
+        "<tr>"
+        "<th>Species</th>"
+        "<th>Temperature (&deg;C)</th>"
+        "<th>Humidity (%%)</th>"
+        "<th>Altitude (m)</th>"
         "</tr>"
     );
 
@@ -407,35 +484,24 @@ static void _writeSpeciesTraitsTable(FILE * out, SimulationState * state) {
                                t.humidity.min    || t.humidity.max    ||
                                t.altitude.min    || t.altitude.max;
 
-            fprintf(out,
-                "<tr>"
-                "<td>%s</td>"
-                "<td>%d</td>"
-                "<td>%d</td>"
-                "<td>%.2f</td>"
-                "<td>%.1f</td>"
-                "<td>%s</td>"
-                "<td>%s</td>"
-                "<td>%s</td>",
-                sp->name,
-                sp->lifespan,
-                sp->speed,
-                sp->reproductionRate,
-                sp->initialEnergy,
-                _strategyToString(sp->reproductiveStrategy),
-                _dietToString(sp->diet),
-                _habitatToString(sp->habitat)
-            );
-
             if (hasTolerance)
                 fprintf(out,
-                    "<td>[%d, %d] / [%d, %d] / [%d, %d]</td></tr>",
+                    "<tr>"
+                    "<td>%s</td>"
+                    "<td>[%d, %d]</td>"
+                    "<td>[%d, %d]</td>"
+                    "<td>[%d, %d]</td>"
+                    "</tr>",
+                    sp->name,
                     t.temperature.min, t.temperature.max,
                     t.humidity.min,    t.humidity.max,
                     t.altitude.min,    t.altitude.max
                 );
             else
-                fprintf(out, "<td>&mdash;</td></tr>");
+                fprintf(out,
+                    "<tr><td>%s</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>",
+                    sp->name
+                );
         }
     }
 
@@ -459,7 +525,11 @@ static void _writeExtinctionCauseChart(FILE * out, SimulationState * state) {
     }
 
     fprintf(out,
+        /* El div con max-width limita el tamaño de la dona (si no, 'responsive'
+           la estira a todo el ancho de la pagina). Ajustar el valor a gusto. */
+        "<div style='max-width:340px'>\n"
         "<canvas id='extinctionCauseChart'></canvas>\n"
+        "</div>\n"
         "<script>\n"
         "new Chart(document.getElementById('extinctionCauseChart'), {\n"
         "type:'doughnut',\n"
