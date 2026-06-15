@@ -1,0 +1,62 @@
+// Batalla de pokemones
+species houndoom = createSpecies{
+    int lifespan = 15;
+    float reproductionRate = 0.4;
+    int speed = 18;
+    reproductionStrategy = reproductionStrategy.K_SELECTED;
+    diet = diet.CARNIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [5, 100];
+    .humidity = [10, 20];
+    .altitude = [0, 2000];
+}
+
+species scizor = createSpecies{
+    int lifespan = 15;
+    float reproductionRate = 0.5;
+    int speed = 10;
+    reproductionStrategy = reproductionStrategy.K_SELECTED;
+    diet = diet.CARNIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [5, 50];
+    .humidity = [30, 80];
+    .altitude = [0, 4000];
+}
+
+region Bosque {
+    temperature = 20;
+    humidity = 70;
+    altitude = 800;
+    carryingCapacity = 200;
+    habitat = TERRESTRIAL;
+}
+
+ecosystem Battle {
+    region Bosque;
+    species houndoom;
+    species scizor;
+}
+
+add 10 houndoom to Battle.Bosque;
+add 15 scizor to Battle.Bosque;
+
+
+on encounter houndoom with scizor in Battle.Bosque {
+    if (houndoom.speed > scizor.speed) {
+        scizor.energy -= 10;
+        houndoom.energy -= 5;
+        if (scizor.energy <= 0) {
+            remove scizor;
+        }
+    }
+    else {
+        houndoom.energy -= 1;
+        move scizor to Patagonia.Bosque;
+    }
+}
+
+
+
+simulate Battle for 10 generations;
