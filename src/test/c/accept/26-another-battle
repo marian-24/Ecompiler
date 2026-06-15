@@ -1,0 +1,62 @@
+// amistoso pikachu - 
+species pikachu = createSpecies{
+    int lifespan = 15;
+    float reproductionRate = 0.6;
+    int speed = 20;
+    reproductionStrategy = reproductionStrategy.K_SELECTED;
+    diet = diet.HERBIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [5, 50];
+    .humidity = [10, 30];
+    .altitude = [0, 2000];
+}
+
+species treecko = createSpecies{
+    int lifespan = 10;
+    float reproductionRate = 0.5;
+    int speed = 11;
+    reproductionStrategy = reproductionStrategy.K_SELECTED;
+    diet = diet.HERBIVORE;
+    habitat = habitat.TERRESTRIAL;
+    environmentalTolerance;
+    .temperature = [5, 30];
+    .humidity = [30, 80];
+    .altitude = [0, 2000];
+}
+
+region Bosque {
+    temperature = 20;
+    humidity = 20;
+    altitude = 500;
+    carryingCapacity = 100;
+    habitat = TERRESTRIAL;
+}
+
+ecosystem Battle {
+    region Bosque;
+    species pikachu;
+    species treecko;
+}
+
+add 10 pikachu to Battle.Bosque;
+add 10 treecko to Battle.Bosque;
+
+
+on encounter pikachu with treecko in Battle.Bosque {
+    if (pikachu.speed > treecko.speed) {
+        treecko.energy -= 10;
+        pikachu.energy -= 5;
+        if (treecko.energy <= 0) {
+            remove treecko;
+        }
+    }
+    else {
+        pikachu.energy -= 1;
+        move treecko to Battle.Bosque;
+    }
+}
+
+
+
+simulate Battle for 15 generations;
