@@ -183,6 +183,13 @@ static Individual * _pickRandom(RuntimeRegion * region, const char * speciesName
     return NULL;
 }
 
+/* verifica si target se encuentra en la región */
+static int _isInRegion(RuntimeRegion * region, Individual * target) {
+    for (Individual * i = region->individuals; i; i = i->next)
+        if (i == target) return 1;
+    return 0;
+}
+
 
 static void _addToRegion(RuntimeRegion * region, const char * speciesName, int count, double initialEnergy) {
     for (int i = 0; i < count; i++) {
@@ -690,49 +697,62 @@ static void _applyEncounters(SimulationState * state, RuntimeEcosystem * eco, Ru
         if (strcmp(b->ecosystemName, eco->name)    != 0) continue;
         if (strcmp(b->regionName,    region->name) != 0) continue;
 
-        Individual * indA = region->individuals;
+        /* Iteramos sobre una copia de los individuos de speciesA en lugar de iterar la lista
+           viva, para evitar desreferenciar punteros inválidos o eliminar punteros necesarios */
+        int countA = _countInRegion(region, b->speciesA);
+        if (countA == 0) continue;
 
-        while (indA) {
-            Individual * nxt = indA->next; /* guardado antes del posible remove */
-            if (strcmp(indA->speciesName, b->speciesA) == 0) {
-                Individual * indB = _pickRandom(region, b->speciesB);
-                if (indB) {
-                    double energyABefore = indA->energy;
-                    double energyBBefore = indB->energy;
+        Individual ** snapshotA = malloc((size_t) countA * sizeof(Individual *));
+        int n = 0;
+        for (Individual * i = region->individuals; i && n < countA; i = i->next)
+            if (strcmp(i->speciesName, b->speciesA) == 0) snapshotA[n++] = i;
 
-                    ExecCtx savedA = _ctxA, savedB = _ctxB;
-                    _ctxA = (ExecCtx){ b->speciesA, indA, 0, region, eco };
-                    _ctxB = (ExecCtx){ b->speciesB, indB, 0, region, eco };
-                    _execList(state, b->body);
+        for (int k = 0; k < n; k++) {
+            Individual * indA = snapshotA[k];
 
-                    int aRemoved = _ctxA.removed, bRemoved = _ctxB.removed;
-                    double energyAAfter = aRemoved ? -1.0
-                                        : (_ctxA.individual ? _ctxA.individual->energy : energyABefore);
-                    double energyBAfter = bRemoved ? -1.0
-                                        : (_ctxB.individual ? _ctxB.individual->energy : energyBBefore);
+            /* Un encuentro anterior de esta misma pasada pudo remover o mover a
+               este individuo (posible cuando speciesA == speciesB). Si ya no esta
+               en la region lo salteamos: nunca desreferenciamos un puntero muerto. */
+            if (!_isInRegion(region, indA)) continue;
 
-                    _ctxA = savedA;
-                    _ctxB = savedB;
+            Individual * indB = _pickRandom(region, b->speciesB);
+            if (indB) {
+                double energyABefore = indA->energy;
+                double energyBBefore = indB->energy;
 
-                    EncounterRecord * rec = calloc(1, sizeof(EncounterRecord));
-                    rec->generation      = state->currentGeneration;
-                    rec->ecosystemName   = strdup(eco->name);
-                    rec->regionName      = strdup(region->name);
-                    rec->speciesA        = strdup(b->speciesA);
-                    rec->energyABefore   = energyABefore;
-                    rec->energyAAfter    = energyAAfter;
-                    rec->speciesARemoved = aRemoved;
-                    rec->speciesB        = strdup(b->speciesB);
-                    rec->energyBBefore   = energyBBefore;
-                    rec->energyBAfter    = energyBAfter;
-                    rec->speciesBRemoved = bRemoved;
-                    _appendEncounterRecord(state, rec);
-                }
-                _registerExtinction(state, eco, region, b->speciesB, EXTINCTION_CAUSE_REMOVED);
-                _registerExtinction(state, eco, region, b->speciesA, EXTINCTION_CAUSE_REMOVED);
+                ExecCtx savedA = _ctxA, savedB = _ctxB;
+                _ctxA = (ExecCtx){ b->speciesA, indA, 0, region, eco };
+                _ctxB = (ExecCtx){ b->speciesB, indB, 0, region, eco };
+                _execList(state, b->body);
+
+                int aRemoved = _ctxA.removed, bRemoved = _ctxB.removed;
+                double energyAAfter = aRemoved ? -1.0
+                                    : (_ctxA.individual ? _ctxA.individual->energy : energyABefore);
+                double energyBAfter = bRemoved ? -1.0
+                                    : (_ctxB.individual ? _ctxB.individual->energy : energyBBefore);
+
+                _ctxA = savedA;
+                _ctxB = savedB;
+
+                EncounterRecord * rec = calloc(1, sizeof(EncounterRecord));
+                rec->generation      = state->currentGeneration;
+                rec->ecosystemName   = strdup(eco->name);
+                rec->regionName      = strdup(region->name);
+                rec->speciesA        = strdup(b->speciesA);
+                rec->energyABefore   = energyABefore;
+                rec->energyAAfter    = energyAAfter;
+                rec->speciesARemoved = aRemoved;
+                rec->speciesB        = strdup(b->speciesB);
+                rec->energyBBefore   = energyBBefore;
+                rec->energyBAfter    = energyBAfter;
+                rec->speciesBRemoved = bRemoved;
+                _appendEncounterRecord(state, rec);
             }
-            indA = nxt;
+            _registerExtinction(state, eco, region, b->speciesB, EXTINCTION_CAUSE_REMOVED);
+            _registerExtinction(state, eco, region, b->speciesA, EXTINCTION_CAUSE_REMOVED);
         }
+
+        free(snapshotA);
     }
 }
 

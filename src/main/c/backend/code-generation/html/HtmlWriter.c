@@ -1,8 +1,6 @@
 #include "HtmlWriter.h"
 #include "../../../support/logging/Logger.h"
 #include "../../../support/type/CompilerState.h"
-/* Para traducir los TokenLabel de estrategia/dieta/hábitat (R_SELECTED, HERBIVORE,
-   TERRESTRIAL, ...) a texto legible. Es el mismo header que ya usa SimulationEngine.c. */
 #include "../../../frontend/syntactic-analysis/BisonParser.h"
 
 static void _writePopulationChart(FILE * out, SimulationState * state);
@@ -12,7 +10,6 @@ static void _writeEncounterTable(FILE * out, SimulationState * state);
 static void _writeExtinctionTable(FILE * out, SimulationState * state);
 static void _writeEnvironmentTable(FILE * out, SimulationState * state);
 
-// Nuevas secciones del reporte
 static void _writeSpeciesTraitsTable(FILE * out, SimulationState * state);
 static void _writeToleranceTable(FILE * out, SimulationState * state);
 static void _writeExtinctionCauseChart(FILE * out, SimulationState * state);
@@ -45,7 +42,7 @@ static int _totalCarryingCapacity(RuntimeEcosystem * ecosystems);
 // Acumulador de energía por especie para el balance de encuentros
 typedef struct EnergyAccum {
     const char *         species;
-    double               netDelta;   // suma de (energía después - energía antes)
+    double               netDelta;   
     struct EnergyAccum * next;
 } EnergyAccum;
 static EnergyAccum * _findEnergyAccum(EnergyAccum * list, const char * species);
@@ -79,17 +76,17 @@ void writeHTML(FILE * out, SimulationState * state) {
 
     _writeSummaryTable(out, state);
     _writeSpeciesSummary(out, state);
-    _writeSpeciesTraitsTable(out, state);      // B: ficha técnica de especies
+    _writeSpeciesTraitsTable(out, state);      // ficha técnica de especies
     _writeToleranceTable(out, state);          // tolerancia ambiental (T/H/A expandida)
 
     _writePopulationChart(out, state);
-    _writeCapacityChart(out, state);           // C: población total vs capacidad de carga
+    _writeCapacityChart(out, state);           // población total vs capacidad de carga
 
     _writeExtinctionTable(out, state);
-    _writeExtinctionCauseChart(out, state);    // A: extinciones por causa (dona)
+    _writeExtinctionCauseChart(out, state);    // extinciones por causa (dona)
 
     _writeEncounterTable(out, state);
-    _writeEnergyBalanceChart(out, state);      // F: balance energético en encuentros
+    _writeEnergyBalanceChart(out, state);      // balance energético en encuentros
 
     _writeEnvironmentTable(out, state);
 
@@ -272,9 +269,7 @@ static void _writeExtinctionTable(FILE * out, SimulationState * state) {
 }
 
 /* Lleva el ultimo estado ambiental visto de CADA region, para detectar cambios
-   por region. La version anterior usaba un unico 'prev' global y comparaba
-   registros consecutivos aunque fueran de regiones distintas: con mas de una
-   region marcaba cambios inexistentes y nunca mostraba "sin cambios". */
+   por region.*/
 typedef struct EnvSeen {
     const char *        region;
     EnvironmentRecord * last;
@@ -295,17 +290,16 @@ static void _writeEnvironmentTable(FILE * out, SimulationState * state) {
     );
 
     EnvSeen * seen = NULL;
-    int realChanges = 0;   /* cambios temporales reales (excluye el estado inicial de cada region) */
+    int realChanges = 0;  
 
     for (EnvironmentRecord * e = state->environmentHistory; e; e = e->next) {
         EnvSeen * s = seen;
         while (s && strcmp(s->region, e->regionName) != 0) s = s->next;
 
         int isNewRegion = (s == NULL);
-        /* Misma region sin cambios respecto a su ultimo estado: nada que mostrar. */
         if (!isNewRegion && !_environmentChanged(s->last, e)) continue;
 
-        if (!isNewRegion) realChanges++;   /* la primera fila de una region es su estado inicial, no un cambio */
+        if (!isNewRegion) realChanges++;
 
         fprintf(out,
             "<tr>"
@@ -413,11 +407,7 @@ static void _writePopulationChart(FILE * out, SimulationState * state){
 }
 
 
-/* ============================================================
- *  NUEVAS SECCIONES DEL REPORTE
- * ============================================================ */
-
-/* B: ficha técnica con los rasgos (finales) de cada especie del ecosistema. */
+/* ficha técnica con los rasgos (finales) de cada especie del ecosistema. */
 static void _writeSpeciesTraitsTable(FILE * out, SimulationState * state) {
     fprintf(out,
         "<h2>Species Traits</h2>"
@@ -462,9 +452,7 @@ static void _writeSpeciesTraitsTable(FILE * out, SimulationState * state) {
     fprintf(out, "</table>\n");
 }
 
-/* Tolerancia ambiental por especie. Antes era una sola columna "T / H / A" cuyas
-   siglas no se entendian; ahora va en su propia tabla, una columna por variable
-   con el nombre completo y la unidad, y el rango [min, max] en cada celda. */
+/* Tolerancia ambiental por especie */
 static void _writeToleranceTable(FILE * out, SimulationState * state) {
     fprintf(out,
         "<h2>Environmental Tolerance</h2>"
@@ -508,7 +496,7 @@ static void _writeToleranceTable(FILE * out, SimulationState * state) {
     fprintf(out, "</table>\n");
 }
 
-/* A: distribución de las extinciones según su causa (gráfico de dona). */
+/* distribución de las extinciones según su causa (gráfico de dona). */
 static void _writeExtinctionCauseChart(FILE * out, SimulationState * state) {
     fprintf(out, "<h2>Extinctions by Cause</h2>\n");
 
@@ -526,7 +514,7 @@ static void _writeExtinctionCauseChart(FILE * out, SimulationState * state) {
 
     fprintf(out,
         /* El div con max-width limita el tamaño de la dona (si no, 'responsive'
-           la estira a todo el ancho de la pagina). Ajustar el valor a gusto. */
+           la estira a todo el ancho de la pagina)*/
         "<div style='max-width:340px'>\n"
         "<canvas id='extinctionCauseChart'></canvas>\n"
         "</div>\n"
@@ -548,7 +536,7 @@ static void _writeExtinctionCauseChart(FILE * out, SimulationState * state) {
     );
 }
 
-/* C: población total del ecosistema generación a generación, contra el
+/* población total del ecosistema generación a generación, contra el
    techo de capacidad de carga (suma de carryingCapacity de las regiones). */
 static void _writeCapacityChart(FILE * out, SimulationState * state) {
     fprintf(out, "<h2>Total Population vs Carrying Capacity</h2>\n");
@@ -604,15 +592,13 @@ static void _writeCapacityChart(FILE * out, SimulationState * state) {
     );
 }
 
-/* F: energía neta ganada (verde) o perdida (rojo) por cada especie a lo
+/* energía neta ganada (verde) o perdida (rojo) por cada especie a lo
    largo de todos los encuentros en que el individuo sobrevivió. */
 static void _writeEnergyBalanceChart(FILE * out, SimulationState * state) {
     fprintf(out, "<h2>Energy Balance in Encounters</h2>\n");
 
     EnergyAccum * accums = NULL;
     for (EncounterRecord * e = state->encounterHistory; e; e = e->next) {
-        /* energyAfter == -1.0 es un centinela para "individuo removido":
-           sólo acumulamos cuando el individuo sobrevivió al encuentro. */
         if (!e->speciesARemoved) {
             EnergyAccum * a = _findEnergyAccum(accums, e->speciesA);
             if (!a) {
@@ -684,7 +670,7 @@ static void _writeEnergyBalanceChart(FILE * out, SimulationState * state) {
 }
 
 
-/*=====HELPERS====== */
+/*HELPERS*/
 static void _htmlBegin(FILE * out, const char * title) {
     fprintf(out,
         "<!DOCTYPE html>"
@@ -804,9 +790,6 @@ static EncounterSummary *_findEncounterSummary(EncounterSummary * list,const cha
     return NULL;
 }
 
-/* Los valores de estrategia/dieta/hábitat se guardan como TokenLabel, que en
-   runtime contiene el valor del token de Bison (R_SELECTED, HERBIVORE, ...).
-   El cast a int evita warnings al hacer switch sobre constantes de otro enum. */
 static const char * _strategyToString(TokenLabel strategy) {
     switch ((int) strategy) {
         case R_SELECTED:
@@ -859,4 +842,3 @@ static EnergyAccum * _findEnergyAccum(EnergyAccum * list, const char * species) 
     }
     return NULL;
 }
-/*=====HELPERS====== */
