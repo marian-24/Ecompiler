@@ -15,6 +15,7 @@ A base compiler example, developed with Flex and Bison.
 ## Requirements
 
 * [Docker v28.3.2](https://www.docker.com/)
+* [Chart.js](https://www.chartjs.org/) (loaded from CDN) for the charts in the generated HTML report.
 
 ## Configuration
 
